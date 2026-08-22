@@ -3,9 +3,17 @@
 > **Cinematic Website Video Recorder & Animation Capture Suite.**
 > Capture smooth scrolling videos, product demos, and animated hero sections from any URL with multi-engine API support, customizable hero hold duration, and HTML5 video autoplay.
 
+🔗 **Live App**: [https://webrecordtool.vercel.app/](https://webrecordtool.vercel.app/)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-webrecordtool.vercel.app-0284c7?style=for-the-badge&logo=vercel)](https://webrecordtool.vercel.app/)
 [![Made with Love by Bonnke](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%EF%B8%8F%20by-Bonnke-d9a441?style=for-the-badge&logo=vercel)](https://bonnke-dev.vercel.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Deployment: Vercel](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://webrecordtool.vercel.app/)
+
+---
+
+## 🌐 Live Application
+You can use the tool directly in your browser without any installation:  
+👉 **[https://webrecordtool.vercel.app/](https://webrecordtool.vercel.app/)**
 
 ---
 
@@ -62,18 +70,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📖 How to Use
 
-1. **Configure Your API Key**:
+1. **Open the Tool**:
+   - Go to [https://webrecordtool.vercel.app/](https://webrecordtool.vercel.app/) or run locally.
+2. **Configure Your API Key**:
    - Click the **API Setup** button in the top right.
    - Choose your provider (**ScreenshotOne**, **ScreenshotCore**, **Microlink**, **Urlbox**, or **Custom**).
    - Paste your API key (stored securely in your browser's private local storage).
-2. **Enter Website URL**:
+3. **Enter Website URL**:
    - Type or paste the target URL (e.g. `https://stripe.com` or `https://apple.com`).
-3. **Set Hero Hold Duration**:
+4. **Set Hero Hold Duration**:
    - Choose how long the video should hold still at the top hero section ($0\text{s}$ to $15\text{s}$) to let background videos or animations play.
-4. **Choose Viewport & Duration**:
+5. **Choose Viewport & Duration**:
    - Pick Desktop, Tablet, Mobile, or Custom resolution.
    - Adjust the total video duration slider.
-5. **Hit ● Record Video**:
+6. **Hit ● Record Video**:
    - Watch the live viewfinder status.
    - Download the generated video or open the direct high-resolution link.
 
@@ -84,7 +94,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 1. Push your repository to GitHub:
    ```bash
    git add .
-   git commit -m "Update app branding to Web-Record tool"
+   git commit -m "Update README with live demo link"
    git push origin main
    ```
 2. Go to [vercel.com](https://vercel.com) and click **"Add New Project"**.
@@ -100,7 +110,7 @@ This project includes pre-built SEO assets for top search engine visibility:
 
 1. **Verify Ownership**:
    - Go to [Google Search Console](https://search.google.com/search-console).
-   - Add your live Vercel domain (e.g. `https://webrecordtool.vercel.app/`).
+   - Add your live Vercel domain: `https://webrecordtool.vercel.app/`.
    - Complete HTML tag verification or DNS verification.
 2. **Submit Sitemap**:
    - In Search Console, navigate to **Sitemaps** on the left menu.
