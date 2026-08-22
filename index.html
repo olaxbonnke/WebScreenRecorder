@@ -1753,8 +1753,24 @@
     syncSpotlightRect();
   }
 
+  function blockManualScroll(e) {
+    if (!e.target.closest('#spotlightTooltip')) {
+      e.preventDefault();
+    }
+  }
+
+  function blockScrollKeys(e) {
+    const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
+    if (keys.includes(e.key) && !['input', 'textarea'].includes((e.target.tagName || '').toLowerCase())) {
+      e.preventDefault();
+    }
+  }
+
   function startSpotlightTour(){
     spotlightOverlay.classList.add('active');
+    window.addEventListener('wheel', blockManualScroll, { passive: false });
+    window.addEventListener('touchmove', blockManualScroll, { passive: false });
+    window.addEventListener('keydown', blockScrollKeys, { passive: false });
     window.addEventListener('scroll', syncSpotlightRect, { passive: true });
     window.addEventListener('resize', syncSpotlightRect);
     if (tourRafId) cancelAnimationFrame(tourRafId);
@@ -1768,6 +1784,9 @@
       cancelAnimationFrame(tourRafId);
       tourRafId = null;
     }
+    window.removeEventListener('wheel', blockManualScroll);
+    window.removeEventListener('touchmove', blockManualScroll);
+    window.removeEventListener('keydown', blockScrollKeys);
     window.removeEventListener('scroll', syncSpotlightRect);
     window.removeEventListener('resize', syncSpotlightRect);
     window.scrollTo({ top: 0, behavior: 'smooth' });
