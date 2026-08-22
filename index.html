@@ -658,13 +658,13 @@
   #spotlightTooltip {
     position: fixed;
     width: 380px;
-    max-width: calc(100vw - 32px);
-    background: rgba(22, 24, 31, 0.88);
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    max-width: calc(100vw - 28px);
+    background: rgba(22, 24, 31, 0.9);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
     border: 1px solid rgba(217, 164, 65, 0.6);
     border-radius: 14px;
-    padding: 20px 22px;
+    padding: 18px 20px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 25px rgba(217, 164, 65, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     pointer-events: auto;
     z-index: 205;
@@ -672,7 +672,7 @@
   }
 
   [data-theme="light"] #spotlightTooltip {
-    background: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.94);
     border-color: rgba(184, 134, 11, 0.55);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18), 0 0 20px rgba(217, 164, 65, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
@@ -688,39 +688,39 @@
     border-radius: 6px;
     display: block;
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     letter-spacing: 0.04em;
   }
   .sp-title {
     font-family: var(--sans);
-    font-size: 17px;
+    font-size: 16.5px;
     font-weight: 700;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: var(--paper);
   }
   .sp-text {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--paper);
     opacity: 0.92;
-    line-height: 1.6;
-    margin: 0 0 18px;
+    line-height: 1.5;
+    margin: 0 0 16px;
   }
   .sp-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 14px;
+    padding-top: 12px;
     border-top: 1px solid var(--line-strong);
-    gap: 12px;
+    gap: 10px;
   }
   .sp-skip {
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--mute);
     background: var(--panel-2);
     border: 1px solid var(--line-strong);
     border-radius: 6px;
-    padding: 8px 14px;
+    padding: 7px 12px;
     cursor: pointer;
     transition: all 0.15s ease;
   }
@@ -735,15 +735,51 @@
   }
   .sp-btn {
     font-family: var(--mono);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 8px 16px;
+    padding: 7px 14px;
     border-radius: 6px;
     border: 1px solid var(--line-strong);
     background: var(--panel-2);
     color: var(--paper);
     cursor: pointer;
     transition: all 0.15s ease;
+  }
+
+  @media (max-width: 640px) {
+    #spotlightTooltip {
+      width: calc(100vw - 24px) !important;
+      left: 12px !important;
+      right: 12px !important;
+      padding: 13px 15px;
+      border-radius: 12px;
+    }
+    .sp-badge-line {
+      font-size: 10px;
+      padding: 3.5px 8px;
+      margin-bottom: 6px;
+    }
+    .sp-title {
+      font-size: 14.5px;
+      margin: 0 0 4px;
+    }
+    .sp-text {
+      font-size: 12px;
+      line-height: 1.4;
+      margin: 0 0 10px;
+    }
+    .sp-footer {
+      padding-top: 9px;
+      gap: 6px;
+    }
+    .sp-skip {
+      font-size: 11px;
+      padding: 6px 10px;
+    }
+    .sp-btn {
+      font-size: 11px;
+      padding: 6px 12px;
+    }
   }
   .sp-btn:hover {
     background: var(--panel);
@@ -1042,7 +1078,7 @@
 
 <div class="wrap">
 
-  <header>
+  <header id="appHeader">
     <div>
       <div class="brand">
         <!-- SVG Logo: Aperture Film Reel -->
@@ -1619,14 +1655,10 @@
   let tourIndex = 0;
   const tourStages = [
     {
-      target: () => {
-        const sp = $('setupPanel');
-        if (sp) sp.style.display = 'block';
-        return sp || $('connPill');
-      },
-      badge: 'Stage 1 of 5 · API Engine & Keys',
-      title: 'Select Provider & Insert API Keys',
-      text: 'Select your rendering engine (ScreenshotOne, ScreenshotCore, Microlink, Urlbox, or Custom) and insert your respective API key.'
+      target: () => $('appHeader') || document.querySelector('header'),
+      badge: 'Stage 1 of 5 · Control Header & Setup',
+      title: 'Web-Record Tool & API Setup',
+      text: 'This is the control header. Use the API Setup button to select your rendering provider (ScreenshotOne, ScreenshotCore, Microlink, Urlbox, or Custom) and save your keys.'
     },
     {
       target: () => $('fieldTargetUrl'),
@@ -1681,19 +1713,33 @@
       maskHole.setAttribute('height', height);
     }
 
-    // Tooltip position (adaptive above/below target based on available space)
-    let ttLeft = left + (width / 2) - 190;
-    if (ttLeft < 16) ttLeft = 16;
-    if (ttLeft + 390 > window.innerWidth) ttLeft = Math.max(16, window.innerWidth - 400);
+    const isMobile = window.innerWidth <= 640;
+    const ttHeight = spotlightTooltip.offsetHeight || (isMobile ? 160 : 190);
 
-    const tooltipHeight = 220;
-    let ttTop;
-    if (top + height + 16 + tooltipHeight <= window.innerHeight) {
-      ttTop = top + height + 16;
-    } else if (top - 16 - tooltipHeight >= 10) {
-      ttTop = top - 16 - tooltipHeight;
+    let ttLeft, ttTop;
+
+    if (isMobile) {
+      ttLeft = 12;
+      // On mobile screens: place tooltip directly adjacent to target (right below if upper, right above if lower)
+      if (top + height + 10 + ttHeight <= window.innerHeight - 8) {
+        ttTop = top + height + 10;
+      } else if (top - 10 - ttHeight >= 8) {
+        ttTop = top - 10 - ttHeight;
+      } else {
+        ttTop = Math.max(8, window.innerHeight - ttHeight - 12);
+      }
     } else {
-      ttTop = Math.max(12, Math.min(top + height + 10, window.innerHeight - tooltipHeight - 12));
+      ttLeft = left + (width / 2) - 190;
+      if (ttLeft < 16) ttLeft = 16;
+      if (ttLeft + 390 > window.innerWidth) ttLeft = Math.max(16, window.innerWidth - 400);
+
+      if (top + height + 14 + ttHeight <= window.innerHeight - 10) {
+        ttTop = top + height + 14;
+      } else if (top - 14 - ttHeight >= 10) {
+        ttTop = top - 14 - ttHeight;
+      } else {
+        ttTop = Math.max(12, Math.min(top + height + 10, window.innerHeight - ttHeight - 12));
+      }
     }
 
     spotlightTooltip.style.top = ttTop + 'px';
