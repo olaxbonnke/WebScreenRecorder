@@ -627,12 +627,25 @@
     visibility: visible;
   }
 
+  #spotlightBlurLayer {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 11, 14, 0.74);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    mask: url(#spotlightMask);
+    -webkit-mask: url(#spotlightMask);
+    z-index: 201;
+    pointer-events: auto;
+  }
+
   #spotlightHole {
     position: absolute;
-    border: 2px solid var(--tape);
+    border: 2.5px solid var(--tape);
     border-radius: 12px;
-    box-shadow: 0 0 0 9999px rgba(10, 11, 14, 0.82), 0 0 24px rgba(217, 164, 65, 0.45);
-    pointer-events: auto;
+    box-shadow: 0 0 24px rgba(217, 164, 65, 0.55);
+    pointer-events: none;
+    z-index: 202;
     transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
                 left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
                 width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1230,6 +1243,16 @@
 
 <!-- Interactive Spotlight Onboarding Elements -->
 <div id="spotlightOverlay">
+  <!-- SVG Mask for Blur Cutout -->
+  <svg id="spotlightSvg" style="position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:201;">
+    <defs>
+      <mask id="spotlightMask">
+        <rect width="100%" height="100%" fill="white" />
+        <rect id="spotlightMaskHole" x="0" y="0" width="0" height="0" rx="12" ry="12" fill="black" />
+      </mask>
+    </defs>
+  </svg>
+  <div id="spotlightBlurLayer"></div>
   <div id="spotlightHole"></div>
   <div id="spotlightTooltip">
     <span class="sp-badge" id="spBadge">Stage 1 of 5</span>
@@ -1497,6 +1520,14 @@
       spotlightHole.style.left = left + 'px';
       spotlightHole.style.width = width + 'px';
       spotlightHole.style.height = height + 'px';
+
+      const maskHole = $('spotlightMaskHole');
+      if (maskHole) {
+        maskHole.setAttribute('x', left);
+        maskHole.setAttribute('y', top);
+        maskHole.setAttribute('width', width);
+        maskHole.setAttribute('height', height);
+      }
 
       spBadge.textContent = stage.badge;
       spTitle.textContent = stage.title;
