@@ -925,16 +925,16 @@
   #preloaderScreen {
     position: fixed;
     inset: 0;
-    z-index: 999;
+    z-index: 999999;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(10, 11, 14, 0.45);
+    background: rgba(10, 11, 14, 0.88);
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s ease;
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s ease;
   }
   #preloaderScreen.hide {
     opacity: 0;
@@ -943,17 +943,17 @@
   }
 
   [data-theme="light"] #preloaderScreen {
-    background: rgba(240, 242, 248, 0.45);
+    background: rgba(245, 247, 252, 0.88);
   }
 
   .preloader-glass {
-    padding: 38px 48px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.3)), rgba(20, 22, 28, 0.78);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(217, 164, 65, 0.5);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(217, 164, 65, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    padding: 44px 56px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.4)), rgba(22, 25, 32, 0.88);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    border: 1.5px solid rgba(217, 164, 65, 0.6);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), 0 0 40px rgba(217, 164, 65, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -963,9 +963,9 @@
   }
 
   [data-theme="light"] .preloader-glass {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 240, 245, 0.6)), rgba(255, 255, 255, 0.88);
-    border-color: rgba(184, 134, 11, 0.45);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15), 0 0 30px rgba(217, 164, 65, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 245, 0.7)), rgba(255, 255, 255, 0.92);
+    border-color: rgba(184, 134, 11, 0.55);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2), 0 0 35px rgba(217, 164, 65, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   }
 
   @keyframes preloaderCardPop {
@@ -974,15 +974,15 @@
   }
 
   .preloader-logo-svg {
-    width: 76px;
-    height: 76px;
-    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
-    margin-bottom: 12px;
+    width: 84px;
+    height: 84px;
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.5));
+    margin-bottom: 14px;
   }
 
   .logo-spinner {
     transform-origin: 36px 36px;
-    animation: spinReel 5s linear infinite;
+    animation: spinReel 4s linear infinite;
   }
   @keyframes spinReel {
     from { transform: rotate(0deg); }
@@ -994,23 +994,23 @@
   }
   @keyframes pulseDot {
     0%, 100% { transform: scale(1); opacity: 0.9; }
-    50% { transform: scale(1.15); opacity: 1; }
+    50% { transform: scale(1.18); opacity: 1; }
   }
 
   .preloader-bar-wrap {
-    width: 90px;
+    width: 100px;
     height: 3px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 99px;
     overflow: hidden;
-    margin-top: 6px;
+    margin-top: 8px;
   }
   .preloader-bar {
     width: 0%;
     height: 100%;
     background: var(--tape);
     border-radius: 99px;
-    transition: width 1.9s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 </style>
 </head>
