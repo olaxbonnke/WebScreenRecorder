@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- Primary SEO Meta Tags -->
+<title>WebScreenRecorder — Record Website Videos with Hero Hold & Auto-Scroll</title>
+<meta name="title" content="WebScreenRecorder — Record Website Videos with Hero Hold & Auto-Scroll" />
+<meta name="description" content="Capture smooth scrolling videos and hero animations of any website. Supports ScreenshotCore, ScreenshotOne, Microlink, Urlbox, and Custom Playwright engines with precision hero delay and video autoplay." />
+<meta name="keywords" content="website video recorder, screen recorder, url to video, screenshot to video, scrolling webpage video, hero delay, screenshotcore, screenshotone, urlbox, microlink" />
+<meta name="author" content="Bonnke" />
+<meta name="robots" content="index, follow" />
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://webscreenrecorder.vercel.app/" />
+<meta property="og:title" content="WebScreenRecorder — Cinematic Website Video Recorder" />
+<meta property="og:description" content="Point it at any website URL and generate smooth MP4/WebM/GIF scrolling videos with custom hero pause duration and video autoplay." />
+<meta property="og:site_name" content="WebScreenRecorder" />
+
+<!-- Twitter Card -->
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="WebScreenRecorder — Cinematic Website Video Recorder" />
+<meta property="twitter:description" content="Record scrolling website videos with custom hero hold timing and HTML5 video autoplay support." />
+<meta property="twitter:creator" content="@bonnke_dev" />
+
+<!-- Schema.org JSON-LD -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "WebScreenRecorder",
+  "url": "https://webscreenrecorder.vercel.app/",
+  "description": "A developer tool to record high-quality scrolling website videos with hero hold timing and multi-engine API support.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "All",
+  "author": {
+    "@type": "Person",
+    "name": "Bonnke",
+    "url": "https://bonnke-dev.vercel.app/"
+  }
+}
+</script>
+
+<!-- Favicon (Inline SVG) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23121316'/%3E%3Ccircle cx='16' cy='16' r='9' stroke='%23d9a441' stroke-width='2.5' fill='none'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23ff4433'/%3E%3Ccircle cx='24' cy='8' r='2' fill='%237ed988'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #121316;
+    --panel: #1b1d21;
+    --panel-2: #24262b;
+    --paper: #edeae4;
+    --mute: #8b8d92;
+    --tape: #d9a441;
+    --tape-dim: #8a6a2c;
+    --signal: #ff4433;
+    --cyan: #38bdf8;
+    --green: #7ed988;
+    --line: rgba(237,234,228,0.10);
+    --line-strong: rgba(237,234,228,0.18);
+    --canvas-dot: rgba(237,234,228,0.14);
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+    --radius: 10px;
+  }
+
+  [data-theme="light"] {
+    --ink: #f4f2ee;
+    --panel: #ffffff;
+    --panel-2: #f0ede6;
+    --paper: #18191c;
+    --mute: #6e7178;
+    --tape: #b37e1b;
+    --tape-dim: #d4a34b;
+    --signal: #e53929;
+    --cyan: #0284c7;
+    --green: #22a048;
+    --line: rgba(24,25,28,0.10);
+    --line-strong: rgba(24,25,28,0.18);
+    --canvas-dot: rgba(24,25,28,0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  body {
+    min-height: 100vh;
+    padding: 28px 16px 80px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Interactive Background Canvas */
+  #bgCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-svg {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .author-badge {
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(217,164,65,0.15);
+    color: var(--tape);
+    border: 1px solid var(--tape-dim);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .author-badge:hover {
+    background: var(--tape);
+    color: #121316;
+  }
+
+  .tagline {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--mute);
+    margin: 4px 0 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn-icon {
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    color: var(--paper);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .btn-icon:hover {
+    background: var(--panel-2);
+    border-color: var(--tape);
+  }
+
+  .conn-pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    color: var(--mute);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .conn-pill:hover { border-color: var(--line-strong); background: var(--panel-2); }
+  .conn-pill .lamp { width: 7px; height: 7px; border-radius: 50%; background: var(--mute); }
+  .conn-pill.on { color: var(--paper); }
+  .conn-pill.on .lamp { background: var(--green); box-shadow: 0 0 0 2px rgba(126,217,136,0.25); }
+
+  /* ---------- Panels ---------- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: background 0.25s ease, border-color 0.25s ease;
+  }
+
+  .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--mute);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .badge-tag {
+    font-size: 9.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(217,164,65,0.18);
+    color: var(--tape);
+    border: 1px solid var(--tape-dim);
+  }
+
+  input[type="text"], input[type="password"], input[type="number"], select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 13.5px;
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input::placeholder { color: #5c5e63; }
+  input:focus, select:focus {
+    border-color: var(--tape);
+    box-shadow: 0 0 0 3px rgba(217,164,65,0.18);
+  }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .hint { font-size: 12px; color: var(--mute); margin-top: 6px; line-height: 1.5; }
+  .hint a { color: var(--tape); text-decoration: none; border-bottom: 1px dashed var(--tape); }
+  .hint a:hover { border-bottom-style: solid; }
+
+  button.btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 11px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel-2);
+    color: var(--paper);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button.btn:hover { border-color: var(--tape-dim); background: var(--panel); }
+  button.btn:focus-visible { outline: 2px solid var(--tape); outline-offset: 2px; }
+  button.btn.primary {
+    background: var(--tape);
+    border-color: var(--tape);
+    color: #121316;
+    font-weight: 600;
+  }
+  button.btn.primary:hover { background: #e6b355; }
+  button.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .setup-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+  /* ---------- Chip groups ---------- */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    padding: 9px 13px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--mute);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+  .chip:hover { border-color: var(--line-strong); color: var(--paper); }
+  .chip.active {
+    background: rgba(217,164,65,0.14);
+    border-color: var(--tape);
+    color: var(--tape);
+    font-weight: 500;
+  }
+  .chip.mini {
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+  .chip:focus-visible { outline: 2px solid var(--tape); outline-offset: 2px; }
+
+  /* ---------- Slider ---------- */
+  .slider-row { display: flex; align-items: center; gap: 14px; }
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--line-strong);
+    border-radius: 999px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--tape);
+    cursor: pointer;
+    border: 2px solid #121316;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--tape); cursor: pointer; border: 2px solid #121316;
+  }
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--tape);
+    min-width: 48px;
+    text-align: right;
+  }
+
+  /* ---------- Toggles ---------- */
+  .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 480px) { .toggles { grid-template-columns: 1fr; } }
+  .toggle {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--paper);
+    cursor: pointer;
+    padding: 6px 2px;
+  }
+  .toggle input { accent-color: var(--tape); width: 16px; height: 16px; }
+
+  /* ---------- Highlight Section ---------- */
+  .hero-wait-box {
+    background: rgba(217,164,65,0.06);
+    border: 1px solid rgba(217,164,65,0.22);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  /* ---------- Timeline Bar ---------- */
+  .timeline-card {
+    background: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+  .timeline-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+    background: var(--panel-2);
+  }
+  .timeline-seg { height: 100%; transition: width 0.2s ease; }
+  .seg-hold { background: var(--tape); }
+  .seg-scroll { background: var(--cyan); }
+  .seg-rest { background: #64748b; }
+  .timeline-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--mute);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .timeline-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  /* ---------- Disclosure ---------- */
+  details.disclosure {
+    border-top: 1px solid var(--line);
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  details.disclosure summary {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--mute);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  details.disclosure summary::-webkit-details-marker { display: none; }
+  details.disclosure summary::before { content: "▸"; color: var(--tape); }
+  details.disclosure[open] summary::before { content: "▾"; }
+  details.disclosure .disclosure-body { margin-top: 14px; }
+
+  /* ---------- Viewfinder ---------- */
+  .viewfinder {
+    position: relative;
+    background: #000;
+    border-radius: var(--radius);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    margin-bottom: 14px;
+  }
+  .vf-corner {
+    position: absolute;
+    width: 22px; height: 22px;
+    border-color: rgba(237,234,228,0.35);
+    z-index: 3;
+  }
+  .vf-corner.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .vf-corner.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .vf-corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .vf-corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .vf-hud {
+    position: absolute;
+    top: 12px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    z-index: 3;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: #edeae4;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .vf-rec { display: flex; align-items: center; gap: 6px; }
+  .vf-rec .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--signal); }
+  .vf-rec.live .dot { animation: blink 1s steps(1) infinite; }
+  @media (prefers-reduced-motion: reduce) { .vf-rec.live .dot { animation: none; } }
+  @keyframes blink { 50% { opacity: 0.25; } }
+
+  .vf-body {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 20px;
+    color: #8b8d92;
+  }
+  .vf-body.idle { color: #8b8d92; }
+  .vf-body p { margin: 0; font-size: 13px; max-width: 440px; line-height: 1.5; }
+  .vf-body .big-icon { font-family: var(--mono); font-size: 34px; letter-spacing: 0.1em; color: #40434a; }
+
+  .vf-body.error { color: #ff9d8f; }
+  .vf-body.error .big-icon { color: var(--signal); }
+
+  video.vf-video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    background: #000;
+    object-fit: contain;
+  }
+
+  .tape-track {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(237,234,228,0.08);
+    z-index: 3;
+  }
+  .tape-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--tape);
+    transition: width 0.2s linear;
+  }
+
+  .record-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+  }
+  .record-bar .btn.primary { flex: 1; min-width: 160px; }
+
+  /* ---------- Filmstrip ---------- */
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin: 0 0 10px 2px;
+  }
+  .filmstrip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .reel-card {
+    flex: 0 0 220px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .reel-card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+  .reel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .reel-fmt {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--tape);
+    text-transform: uppercase;
+  }
+  .reel-provider {
+    font-family: var(--mono);
+    font-size: 9px;
+    background: var(--panel-2);
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: var(--mute);
+  }
+  .reel-url {
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--paper);
+    margin: 6px 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .reel-meta { font-family: var(--mono); font-size: 10px; color: var(--mute); }
+  .empty-note {
+    font-size: 13px;
+    color: var(--mute);
+    padding: 10px 2px;
+  }
+
+  .url-inspector {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--mute);
+    word-break: break-all;
+    user-select: all;
+    margin-top: 10px;
+  }
+
+  /* ---------- Footer & Attribution ---------- */
+  footer {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    font-family: var(--sans);
+  }
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .footer-links a {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--paper);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    transition: all 0.15s ease;
+  }
+  .footer-links a:hover {
+    border-color: var(--tape);
+    color: var(--tape);
+    background: var(--panel-2);
+  }
+  .footer-credit {
+    font-size: 12.5px;
+    color: var(--mute);
+    margin-top: 10px;
+  }
+  .footer-credit a {
+    color: var(--tape);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .footer-credit a:hover {
+    text-decoration: underline;
+  }
+  .footer-sub {
+    font-size: 11px;
+    color: var(--mute);
+    opacity: 0.7;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Interactive Particle & Dot Grid Canvas -->
+<canvas id="bgCanvas"></canvas>
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand">
+        <!-- SVG Logo: Aperture Film Reel -->
+        <svg class="logo-svg" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="9" fill="url(#logo_grad)" />
+          <circle cx="18" cy="18" r="11" stroke="#d9a441" stroke-width="2.5" stroke-dasharray="3 2" />
+          <circle cx="18" cy="18" r="5" fill="#ff4433" />
+          <circle cx="28" cy="8" r="2.5" fill="#7ed988" />
+          <defs>
+            <linearGradient id="logo_grad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#24262b" />
+              <stop offset="1" stop-color="#121316" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1>
+            WebScreenRecorder
+            <a href="https://bonnke-dev.vercel.app/" target="_blank" rel="noopener" class="author-badge">by Bonnke</a>
+          </h1>
+          <p class="tagline">Point at any URL. Capture smooth scrolling videos with custom hero pause.</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <!-- Theme Switcher -->
+      <button class="btn-icon" id="themeToggle" type="button" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
+        <span id="themeIcon">☀️</span>
+      </button>
+      <!-- Connection Pill -->
+      <button class="conn-pill" id="connPill" type="button">
+        <span class="lamp"></span>
+        <span id="connLabel">API Setup</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Setup & API Provider panel -->
+  <div class="panel" id="setupPanel">
+    <div class="field">
+      <label class="label">API Engine Provider</label>
+      <div class="chips" id="providerChips">
+        <span class="chip active" data-provider="screenshotone">ScreenshotOne (Hold + Scroll)</span>
+        <span class="chip" data-provider="screenshotcore">ScreenshotCore</span>
+        <span class="chip" data-provider="microlink">Microlink</span>
+        <span class="chip" data-provider="urlbox">Urlbox</span>
+        <span class="chip" data-provider="custom">Custom Endpoint</span>
+      </div>
+    </div>
+
+    <!-- ScreenshotOne Form -->
+    <div id="cfg-screenshotone" class="provider-cfg">
+      <div class="field">
+        <label class="label" for="s1AccessKey">ScreenshotOne Access Key</label>
+        <input type="password" id="s1AccessKey" placeholder="Paste access key" autocomplete="off" />
+        <p class="hint"><strong>Recommended for In-Video Hero Hold:</strong> ScreenshotOne natively pauses for <code>scroll_start_delay</code> ms before executing its smooth CDP scrolling animation. Key from <a href="https://dash.screenshotone.com/access" target="_blank" rel="noopener">ScreenshotOne Dashboard</a>.</p>
+      </div>
+      <div class="field">
+        <label class="label" for="s1SecretKey">Secret Key (Optional)</label>
+        <input type="password" id="s1SecretKey" placeholder="Only required if signed requests are enabled" autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- ScreenshotCore Form -->
+    <div id="cfg-screenshotcore" class="provider-cfg" style="display:none;">
+      <div class="field">
+        <label class="label" for="scApiKey">ScreenshotCore API Key</label>
+        <input type="password" id="scApiKey" placeholder="Paste your ScreenshotCore API key" autocomplete="off" />
+        <p class="hint">ScreenshotCore uses auto-scrolling with pre-capture load delay. Key from <a href="https://screenshotcore.com" target="_blank" rel="noopener">ScreenshotCore Dashboard</a>.</p>
+      </div>
+      <div class="field">
+        <label class="label" for="scBaseUrl">ScreenshotCore Endpoint</label>
+        <input type="text" id="scBaseUrl" value="https://screenshotcore.com/api/v1/screenshot" />
+      </div>
+    </div>
+
+    <!-- Microlink Form -->
+    <div id="cfg-microlink" class="provider-cfg" style="display:none;">
+      <div class="field">
+        <label class="label" for="mlApiKey">Microlink API Key (Optional)</label>
+        <input type="password" id="mlApiKey" placeholder="Leave empty for free tier or paste Pro x-api-key" autocomplete="off" />
+        <p class="hint">Microlink records video directly. See <a href="https://microlink.io" target="_blank" rel="noopener">Microlink.io</a>.</p>
+      </div>
+    </div>
+
+    <!-- Urlbox Form -->
+    <div id="cfg-urlbox" class="provider-cfg" style="display:none;">
+      <div class="field">
+        <label class="label" for="ubApiKey">Urlbox API Key</label>
+        <input type="password" id="ubApiKey" placeholder="Paste your Urlbox API key" autocomplete="off" />
+        <p class="hint">From <a href="https://urlbox.com" target="_blank" rel="noopener">Urlbox Dashboard</a>.</p>
+      </div>
+      <div class="field">
+        <label class="label" for="ubSecretKey">Urlbox Secret (Optional)</label>
+        <input type="password" id="ubSecretKey" placeholder="Optional HMAC Secret Key" autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- Custom / Self-Hosted Form -->
+    <div id="cfg-custom" class="provider-cfg" style="display:none;">
+      <div class="field">
+        <label class="label">Quick Preset Templates</label>
+        <div class="chips" id="customPresets">
+          <span class="chip mini" data-preset="screenshotone">ScreenshotOne</span>
+          <span class="chip mini" data-preset="screenshotcore">ScreenshotCore</span>
+          <span class="chip mini" data-preset="screenshotapi">ScreenshotAPI.net</span>
+          <span class="chip mini" data-preset="apiflash">ApiFlash</span>
+          <span class="chip mini" data-preset="generic">Generic Playwright / Node</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="customEndpoint">Video Endpoint URL Template</label>
+        <input type="text" id="customEndpoint" placeholder="https://api.screenshotone.com/animate?url={{url}}&access_key={{key}}&format={{format}}&duration={{duration}}&scenario=scroll&scroll_start_delay={{hero_hold_ms}}&delay={{preload_delay_s}}" />
+        <p class="hint">Placeholders: <code>{{url}}</code>, <code>{{key}}</code>, <code>{{hero_hold_s}}</code>, <code>{{hero_hold_ms}}</code>, <code>{{preload_delay_s}}</code>, <code>{{preload_delay_ms}}</code>, <code>{{duration}}</code>, <code>{{width}}</code>, <code>{{height}}</code>, <code>{{format}}</code>, <code>{{scroll}}</code>.</p>
+      </div>
+      <div class="field">
+        <label class="label" for="customApiKey">API Key / Token (Optional)</label>
+        <input type="password" id="customApiKey" placeholder="Substituted into {{key}}" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="setup-actions">
+      <button class="btn primary" id="saveKeys" type="button">Save Configuration</button>
+      <button class="btn" id="cancelKeys" type="button">Done</button>
+    </div>
+    <p class="err-text" id="setupError" style="display:none;"></p>
+  </div>
+
+  <!-- Recorder panel -->
+  <div class="panel" id="recorderPanel">
+    <div class="field">
+      <label class="label" for="siteUrl">Target Website URL</label>
+      <input type="text" id="siteUrl" placeholder="https://example.com" autocomplete="off" />
+    </div>
+
+    <!-- Hero / Top Hold Delay & Autoplay Tuning -->
+    <div class="field">
+      <div class="hero-wait-box">
+        <label class="label" style="color:var(--tape);">
+          <span>1. Hero Hold Duration In Video</span>
+          <span class="badge-tag" id="heroHoldBadge">3s Hero Hold</span>
+        </label>
+        <p class="hint" style="margin-top:0; margin-bottom:10px;">The video recording stays paused at the hero/top for this duration so hero video reels and animations play on screen before scrolling down.</p>
+        <div class="chips" id="heroHoldChips" style="margin-bottom:12px;">
+          <span class="chip" data-hold="0">0s (Scroll Instantly)</span>
+          <span class="chip" data-hold="2">2s</span>
+          <span class="chip active" data-hold="3">3s (Recommended)</span>
+          <span class="chip" data-hold="5">5s</span>
+          <span class="chip" data-hold="8">8s</span>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="heroHoldRange" min="0" max="15" value="3" step="1" />
+          <span class="slider-val" id="heroHoldVal">3s</span>
+        </div>
+
+        <div class="timeline-card">
+          <div style="display:flex; justify-content:space-between; font-weight:600; color:var(--paper);">
+            <span>Video Playback Timeline:</span>
+            <span id="timelineTotal">Total: 8.0s</span>
+          </div>
+          <div class="timeline-bar">
+            <div class="timeline-seg seg-hold" id="segHold" style="width: 37.5%;"></div>
+            <div class="timeline-seg seg-scroll" id="segScroll" style="width: 37.5%;"></div>
+            <div class="timeline-seg seg-rest" id="segRest" style="width: 25%;"></div>
+          </div>
+          <div class="timeline-legend">
+            <span><span class="legend-dot" style="background:var(--tape);"></span> Hero Hold (<span id="legHold">3s</span>)</span>
+            <span><span class="legend-dot" style="background:var(--cyan);"></span> Scroll (<span id="legScroll">3s</span>)</span>
+            <span><span class="legend-dot" style="background:#64748b;"></span> Settle/Finish (<span id="legRest">2s</span>)</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);">
+          <label class="label" style="margin-bottom: 6px;">
+            <span>2. Pre-Record Page Load Buffer</span>
+            <span class="slider-val" id="preloadVal" style="font-size:12px;">2s</span>
+          </label>
+          <p class="hint" style="margin-top:0; margin-bottom:8px;">Headless browser warmup time before video capture begins to ensure fonts & heavy hero video streams finish buffering.</p>
+          <div class="slider-row">
+            <input type="range" id="preloadRange" min="0" max="10" value="2" step="1" />
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line);">
+          <label class="toggle" style="font-weight: 500; color: var(--paper);">
+            <input type="checkbox" id="forceVideoPlay" checked />
+            Force Autoplay & Wakeup HTML5 Hero/Background Videos
+          </label>
+          <p class="hint" style="margin-top:2px;">Injects playback overrides across all engines so headless browsers unpause and loop video backgrounds that usually require user clicks.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Viewport</label>
+      <div class="chips" id="viewportChips">
+        <span class="chip active" data-w="1440" data-h="900">Desktop 1440×900</span>
+        <span class="chip" data-w="768" data-h="1024">Tablet 768×1024</span>
+        <span class="chip" data-w="390" data-h="844">Mobile 390×844</span>
+        <span class="chip" data-custom="1">Custom</span>
+      </div>
+      <div class="row" id="customViewport" style="display:none; margin-top:10px;">
+        <input type="number" id="customW" placeholder="Width" min="200" max="3840" value="1440" />
+        <input type="number" id="customH" placeholder="Height" min="200" max="3840" value="900" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Motion Behavior</label>
+      <div class="chips" id="scenarioChips">
+        <span class="chip active" data-scenario="scroll">Hold at Hero + Smooth Scroll</span>
+        <span class="chip" data-scenario="default">Hold at Hero Only (No Scroll)</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Output Format</label>
+      <div class="chips" id="formatChips">
+        <span class="chip active" data-format="mp4">MP4</span>
+        <span class="chip" data-format="webm">WebM</span>
+        <span class="chip" data-format="gif">GIF</span>
+        <span class="chip" data-format="mov">MOV</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Total Recording Duration</label>
+      <div class="slider-row">
+        <input type="range" id="duration" min="2" max="30" value="8" />
+        <span class="slider-val" id="durationVal">8s</span>
+      </div>
+    </div>
+
+    <details class="disclosure" id="scrollDetails" open>
+      <summary>Scroll & Physics Tuning</summary>
+      <div class="disclosure-body">
+        <div class="row">
+          <div class="field">
+            <label class="label" for="scrollBy">Scroll distance (px)</label>
+            <input type="number" id="scrollBy" value="1200" min="100" max="5000" />
+          </div>
+          <div class="field">
+            <label class="label" for="scrollDuration">Scroll time (ms)</label>
+            <input type="number" id="scrollDuration" value="2500" min="200" max="10000" />
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label class="label" for="scrollDelay">Delay between scrolls (ms)</label>
+            <input type="number" id="scrollDelay" value="500" min="0" max="5000" />
+          </div>
+          <div class="field">
+            <label class="label" for="scrollEasing">Easing Curve</label>
+            <select id="scrollEasing">
+              <option value="ease_in_out_quint" selected>Ease in-out quint (Smooth cinematic)</option>
+              <option value="linear">Linear</option>
+              <option value="ease_in_out_cubic">Ease in-out cubic</option>
+              <option value="ease_out_quad">Ease out quad</option>
+            </select>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="scrollBack" checked />
+          Scroll back to top before finishing
+        </label>
+      </div>
+    </details>
+
+    <details class="disclosure">
+      <summary>Cleanup & Blocking</summary>
+      <div class="disclosure-body">
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" id="blockAds" checked /> Block ads</label>
+          <label class="toggle"><input type="checkbox" id="blockCookies" checked /> Block cookie banners</label>
+          <label class="toggle"><input type="checkbox" id="blockChats" checked /> Block chat widgets</label>
+          <label class="toggle"><input type="checkbox" id="blockTrackers" checked /> Block trackers</label>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Viewfinder -->
+  <div class="viewfinder" id="viewfinder">
+    <div class="vf-corner tl"></div>
+    <div class="vf-corner tr"></div>
+    <div class="vf-corner bl"></div>
+    <div class="vf-corner br"></div>
+    <div class="vf-hud">
+      <span class="vf-rec" id="vfRec"><span class="dot"></span><span id="vfRecLabel">STANDBY</span></span>
+      <span id="vfMeta">—</span>
+    </div>
+    <div class="vf-body idle" id="vfBody">
+      <div class="big-icon">▢</div>
+      <p>Configure your URL and options above, then hit Record.</p>
+    </div>
+    <div class="tape-track"><div class="tape-fill" id="tapeFill"></div></div>
+  </div>
+
+  <div class="record-bar" id="recordBar">
+    <button class="btn primary" id="recordBtn" type="button">● Record Video</button>
+    <button class="btn" id="downloadBtn" type="button" style="display:none;">Download</button>
+    <button class="btn" id="openBtn" type="button" style="display:none;">Open direct link</button>
+  </div>
+
+  <div id="inspectorContainer" style="display:none; margin-bottom: 20px;">
+    <label class="label">API Request Inspector</label>
+    <div class="url-inspector" id="urlInspector"></div>
+  </div>
+
+  <p class="section-title">Recent recordings</p>
+  <div class="filmstrip" id="filmstrip">
+    <p class="empty-note" id="emptyNote">Nothing recorded yet — your recent captures will show up here.</p>
+  </div>
+
+  <!-- Footer & Attribution -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://bonnke-dev.vercel.app/" target="_blank" rel="noopener">
+        <span>🌐</span> Portfolio
+      </a>
+      <a href="https://github.com/Bonnke" target="_blank" rel="noopener">
+        <span>🐙</span> Follow @Bonnke
+      </a>
+      <a href="https://github.com/Bonnke/WebScreenRecorder" target="_blank" rel="noopener">
+        <span>⭐</span> Star Repository
+      </a>
+    </div>
+    <p class="footer-credit">
+      Made with <span style="color:#ff4433;">❤️</span> by <a href="https://bonnke-dev.vercel.app/" target="_blank" rel="noopener">Bonnke</a>
+    </p>
+    <p class="footer-sub">
+      WebScreenRecorder — High-performance multi-engine website video capturing suite.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- Interactive Particle & Dot Grid Cursor Effect ----------
+  const canvas = $('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000 };
+  const particles = [];
+  const numParticles = 45;
+
+  function resizeCanvas(){
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  for (let i = 0; i < numParticles; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.4,
+      size: Math.random() * 2 + 1,
+      baseAlpha: Math.random() * 0.25 + 0.1
+    });
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.targetX = e.clientX;
+    mouse.targetY = e.clientY;
+  });
+  window.addEventListener('mouseleave', () => {
+    mouse.targetX = -1000;
+    mouse.targetY = -1000;
+  });
+
+  function drawCanvas(){
+    ctx.clearRect(0, 0, width, height);
+
+    mouse.x += (mouse.targetX - mouse.x) * 0.1;
+    mouse.y += (mouse.targetY - mouse.y) * 0.1;
+
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const dotColor = isLight ? 'rgba(24, 25, 28, ' : 'rgba(237, 234, 228, ';
+    const glowColor = isLight ? 'rgba(179, 126, 27, ' : 'rgba(217, 164, 65, ';
+
+    // 1. Subtle cursor magnetic glow
+    if (mouse.x > 0 && mouse.y > 0) {
+      const grad = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 180);
+      grad.addColorStop(0, glowColor + '0.12)');
+      grad.addColorStop(1, glowColor + '0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(mouse.x, mouse.y, 180, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2. Floating interactive particle dots
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      if (p.y > height) p.y = 0;
+
+      // Mouse repulsion/attraction effect
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 140) {
+        const force = (140 - dist) / 140;
+        p.x -= (dx / dist) * force * 1.5;
+        p.y -= (dy / dist) * force * 1.5;
+      }
+
+      ctx.fillStyle = dotColor + (p.baseAlpha * (dist < 140 ? 1.8 : 1)) + ')';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(drawCanvas);
+  }
+  requestAnimationFrame(drawCanvas);
+
+  // ---------- Theme Switcher ----------
+  const themeToggle = $('themeToggle');
+  const themeIcon = $('themeIcon');
+
+  function setTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+    localStorage.setItem('rec_theme', theme);
+  }
+
+  const savedTheme = localStorage.getItem('rec_theme') || 'dark';
+  setTheme(savedTheme);
+
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'light' ? 'dark' : 'light');
+  });
+
+  // ---------- Application State & Core ----------
+  const state = {
+    provider: 'screenshotone',
+    providers: {
+      screenshotone: { accessKey: '', secretKey: '' },
+      screenshotcore: { apiKey: '', baseUrl: 'https://screenshotcore.com/api/v1/screenshot' },
+      microlink: { apiKey: '' },
+      urlbox: { apiKey: '', secretKey: '' },
+      custom: { endpoint: 'https://api.screenshotone.com/animate?url={{url}}&access_key={{key}}&format={{format}}&duration={{duration}}&scenario=scroll&scroll_start_delay={{hero_hold_ms}}&delay={{preload_delay_s}}', apiKey: '' }
+    },
+    heroHoldSecs: 3,
+    preloadDelaySecs: 2,
+    viewportW: 1440,
+    viewportH: 900,
+    scenario: 'scroll',
+    format: 'mp4',
+    history: []
+  };
+
+  let currentObjectUrl = null;
+  let elapsedTimer = null;
+
+  const storageEngine = {
+    get: async (key) => {
+      try {
+        if (window.storage && window.storage.get) {
+          const res = await window.storage.get(key, false);
+          return res ? res.value : null;
+        }
+      } catch (e) {}
+      return localStorage.getItem('rec_tool_' + key);
+    },
+    set: async (key, val) => {
+      try {
+        if (window.storage && window.storage.set) {
+          await window.storage.set(key, val, false);
+          return;
+        }
+      } catch (e) {}
+      localStorage.setItem('rec_tool_' + key, val);
+    }
+  };
+
+  async function loadConfig(){
+    try {
+      const val = await storageEngine.get('config_webscreenrecorder_v1');
+      if (val) {
+        const cfg = JSON.parse(val);
+        if (cfg.provider) state.provider = cfg.provider;
+        if (cfg.providers) state.providers = { ...state.providers, ...cfg.providers };
+        if (cfg.heroHoldSecs !== undefined) state.heroHoldSecs = cfg.heroHoldSecs;
+        if (cfg.preloadDelaySecs !== undefined) state.preloadDelaySecs = cfg.preloadDelaySecs;
+      } else {
+        const legacy = await storageEngine.get('config_multi_v5') || await storageEngine.get('config_multi_v4');
+        if (legacy) {
+          const lCfg = JSON.parse(legacy);
+          if (lCfg.providers) state.providers = { ...state.providers, ...lCfg.providers };
+          if (lCfg.heroHoldSecs !== undefined) state.heroHoldSecs = lCfg.heroHoldSecs;
+        }
+      }
+    } catch (e) { console.warn('Config load', e); }
+
+    syncInputsFromState();
+    refreshConnectionUI();
+    updateTimeline();
+  }
+
+  async function saveConfig(){
+    try {
+      await storageEngine.set('config_webscreenrecorder_v1', JSON.stringify({
+        provider: state.provider,
+        providers: state.providers,
+        heroHoldSecs: state.heroHoldSecs,
+        preloadDelaySecs: state.preloadDelaySecs
+      }));
+      return true;
+    } catch (e) {
+      console.error('Could not save configuration', e);
+      return false;
+    }
+  }
+
+  async function loadHistory(){
+    try {
+      const val = await storageEngine.get('history_webscreenrecorder_v1');
+      if (val) state.history = JSON.parse(val);
+    } catch (e) { state.history = []; }
+    renderFilmstrip();
+  }
+
+  async function saveHistory(){
+    try {
+      await storageEngine.set('history_webscreenrecorder_v1', JSON.stringify(state.history.slice(0, 12)));
+    } catch (e) { console.error('Could not save history', e); }
+  }
+
+  function syncInputsFromState(){
+    $('s1AccessKey').value = state.providers.screenshotone.accessKey || '';
+    $('s1SecretKey').value = state.providers.screenshotone.secretKey || '';
+    $('scApiKey').value = state.providers.screenshotcore.apiKey || '';
+    $('scBaseUrl').value = state.providers.screenshotcore.baseUrl || 'https://screenshotcore.com/api/v1/screenshot';
+    $('mlApiKey').value = state.providers.microlink.apiKey || '';
+    $('ubApiKey').value = state.providers.urlbox.apiKey || '';
+    $('ubSecretKey').value = state.providers.urlbox.secretKey || '';
+    $('customEndpoint').value = state.providers.custom.endpoint || '';
+    $('customApiKey').value = state.providers.custom.apiKey || '';
+
+    setHeroHoldUI(state.heroHoldSecs);
+    $('preloadRange').value = state.preloadDelaySecs;
+    $('preloadVal').textContent = state.preloadDelaySecs + 's';
+
+    document.querySelectorAll('#providerChips .chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.provider === state.provider);
+    });
+    switchProviderTab(state.provider);
+  }
+
+  function switchProviderTab(providerName){
+    document.querySelectorAll('.provider-cfg').forEach(el => el.style.display = 'none');
+    const target = $('cfg-' + providerName);
+    if (target) target.style.display = 'block';
+  }
+
+  function refreshConnectionUI(){
+    const pill = $('connPill'), label = $('connLabel');
+    const p = state.provider;
+    let isConnected = false;
+    let desc = '';
+
+    if (p === 'screenshotone') {
+      const key = state.providers.screenshotone.accessKey;
+      isConnected = Boolean(key);
+      desc = isConnected ? 'ScreenshotOne ····' + key.slice(-4) : 'ScreenshotOne (No Key)';
+    } else if (p === 'screenshotcore') {
+      const key = state.providers.screenshotcore.apiKey;
+      isConnected = Boolean(key);
+      desc = isConnected ? 'ScreenshotCore ····' + key.slice(-4) : 'ScreenshotCore (No Key)';
+    } else if (p === 'microlink') {
+      const key = state.providers.microlink.apiKey;
+      isConnected = true;
+      desc = key ? 'Microlink (Pro ····' + key.slice(-4) + ')' : 'Microlink (Public)';
+    } else if (p === 'urlbox') {
+      const key = state.providers.urlbox.apiKey;
+      isConnected = Boolean(key);
+      desc = isConnected ? 'Urlbox ····' + key.slice(-4) : 'Urlbox (No Key)';
+    } else if (p === 'custom') {
+      const ep = state.providers.custom.endpoint;
+      isConnected = Boolean(ep);
+      desc = isConnected ? 'Custom Endpoint' : 'Custom (No Endpoint)';
+    }
+
+    pill.classList.toggle('on', isConnected);
+    label.textContent = desc;
+
+    if (!isConnected && p !== 'microlink') {
+      $('setupPanel').style.display = 'block';
+    } else {
+      $('setupPanel').style.display = 'none';
+    }
+  }
+
+  $('connPill').addEventListener('click', () => {
+    const isShowing = $('setupPanel').style.display === 'block';
+    $('setupPanel').style.display = isShowing ? 'none' : 'block';
+  });
+
+  $('cancelKeys').addEventListener('click', () => {
+    $('setupPanel').style.display = 'none';
+  });
+
+  $('saveKeys').addEventListener('click', async () => {
+    state.providers.screenshotone.accessKey = $('s1AccessKey').value.trim();
+    state.providers.screenshotone.secretKey = $('s1SecretKey').value.trim();
+    state.providers.screenshotcore.apiKey = $('scApiKey').value.trim();
+    state.providers.screenshotcore.baseUrl = $('scBaseUrl').value.trim() || 'https://screenshotcore.com/api/v1/screenshot';
+    state.providers.microlink.apiKey = $('mlApiKey').value.trim();
+    state.providers.urlbox.apiKey = $('ubApiKey').value.trim();
+    state.providers.urlbox.secretKey = $('ubSecretKey').value.trim();
+    state.providers.custom.endpoint = $('customEndpoint').value.trim();
+    state.providers.custom.apiKey = $('customApiKey').value.trim();
+
+    const err = $('setupError');
+    if (state.provider === 'screenshotone' && !state.providers.screenshotone.accessKey) {
+      err.textContent = 'Paste your ScreenshotOne access key to save.';
+      err.style.display = 'block';
+      return;
+    }
+    if (state.provider === 'screenshotcore' && !state.providers.screenshotcore.apiKey) {
+      err.textContent = 'Paste your ScreenshotCore API key to save.';
+      err.style.display = 'block';
+      return;
+    }
+    if (state.provider === 'urlbox' && !state.providers.urlbox.apiKey) {
+      err.textContent = 'Paste your Urlbox API key to save.';
+      err.style.display = 'block';
+      return;
+    }
+    if (state.provider === 'custom' && !state.providers.custom.endpoint) {
+      err.textContent = 'Enter your custom endpoint template URL.';
+      err.style.display = 'block';
+      return;
+    }
+
+    err.style.display = 'none';
+    await saveConfig();
+    refreshConnectionUI();
+  });
+
+  document.querySelectorAll('#customPresets .chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.dataset.preset;
+      if (preset === 'screenshotone') {
+        $('customEndpoint').value = 'https://api.screenshotone.com/animate?url={{url}}&access_key={{key}}&format={{format}}&duration={{duration}}&scenario=scroll&scroll_start_delay={{hero_hold_ms}}&delay={{preload_delay_s}}';
+      } else if (preset === 'screenshotcore') {
+        $('customEndpoint').value = 'https://screenshotcore.com/api/v1/screenshot?url={{url}}&format={{format}}&video_duration={{duration}}&video_scroll={{scroll}}&delay={{preload_delay_ms}}&access_key={{key}}';
+      } else if (preset === 'screenshotapi') {
+        $('customEndpoint').value = 'https://shot.screenshotapi.net/screenshot?token={{key}}&url={{url}}&output=video&file_type={{format}}&wait_for_event=load&delay={{preload_delay_ms}}';
+      } else if (preset === 'apiflash') {
+        $('customEndpoint').value = 'https://api.apiflash.com/v1/urltoimage?access_key={{key}}&url={{url}}&format={{format}}&delay={{preload_delay_s}}&width={{width}}&height={{height}}';
+      } else if (preset === 'generic') {
+        $('customEndpoint').value = 'http://localhost:8080/render?url={{url}}&format={{format}}&duration={{duration}}&delay={{hero_hold_s}}';
+      }
+    });
+  });
+
+  function wireChips(groupId, onPick){
+    const group = $(groupId);
+    group.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        onPick(chip);
+      });
+    });
+  }
+
+  wireChips('providerChips', (chip) => {
+    state.provider = chip.dataset.provider;
+    switchProviderTab(state.provider);
+    refreshConnectionUI();
+  });
+
+  wireChips('viewportChips', (chip) => {
+    if (chip.dataset.custom) {
+      $('customViewport').style.display = 'flex';
+    } else {
+      $('customViewport').style.display = 'none';
+      state.viewportW = parseInt(chip.dataset.w, 10);
+      state.viewportH = parseInt(chip.dataset.h, 10);
+    }
+  });
+  $('customW').addEventListener('input', e => state.viewportW = parseInt(e.target.value, 10) || 1440);
+  $('customH').addEventListener('input', e => state.viewportH = parseInt(e.target.value, 10) || 900);
+
+  wireChips('scenarioChips', (chip) => {
+    state.scenario = chip.dataset.scenario;
+    $('scrollDetails').style.display = state.scenario === 'scroll' ? 'block' : 'none';
+    updateTimeline();
+  });
+
+  wireChips('formatChips', (chip) => { state.format = chip.dataset.format; });
+
+  $('duration').addEventListener('input', e => {
+    $('durationVal').textContent = e.target.value + 's';
+    updateTimeline();
+  });
+
+  function updateTimeline(){
+    const totalDur = parseFloat($('duration').value) || 8;
+    const holdDur = state.scenario === 'scroll' ? state.heroHoldSecs : totalDur;
+    const scrollDur = state.scenario === 'scroll' ? ((parseFloat($('scrollDuration').value) || 2500) / 1000) : 0;
+    const restDur = Math.max(0, totalDur - (holdDur + scrollDur));
+
+    const holdPct = Math.min(100, (holdDur / totalDur) * 100);
+    const scrollPct = Math.min(100 - holdPct, (scrollDur / totalDur) * 100);
+    const restPct = Math.max(0, 100 - holdPct - scrollPct);
+
+    $('segHold').style.width = holdPct + '%';
+    $('segScroll').style.width = scrollPct + '%';
+    $('segRest').style.width = restPct + '%';
+
+    $('timelineTotal').textContent = `Total: ${totalDur.toFixed(1)}s`;
+    $('legHold').textContent = `${holdDur}s`;
+    $('legScroll').textContent = `${scrollDur.toFixed(1)}s`;
+    $('legRest').textContent = `${restDur.toFixed(1)}s`;
+  }
+
+  function setHeroHoldUI(seconds) {
+    state.heroHoldSecs = parseInt(seconds, 10) || 0;
+    $('heroHoldRange').value = state.heroHoldSecs;
+    $('heroHoldVal').textContent = state.heroHoldSecs + 's';
+    $('heroHoldBadge').textContent = state.heroHoldSecs > 0 ? (state.heroHoldSecs + 's Hero Hold') : 'Instant Scroll';
+
+    document.querySelectorAll('#heroHoldChips .chip').forEach(c => {
+      c.classList.toggle('active', parseInt(c.dataset.hold, 10) === state.heroHoldSecs);
+    });
+
+    const currentDur = parseInt($('duration').value, 10);
+    const needed = state.heroHoldSecs + 4;
+    if (currentDur < needed) {
+      $('duration').value = needed;
+      $('durationVal').textContent = needed + 's';
+    }
+    updateTimeline();
+  }
+
+  wireChips('heroHoldChips', (chip) => {
+    setHeroHoldUI(chip.dataset.hold);
+    saveConfig();
+  });
+
+  $('heroHoldRange').addEventListener('input', (e) => setHeroHoldUI(e.target.value));
+  $('heroHoldRange').addEventListener('change', () => saveConfig());
+
+  $('preloadRange').addEventListener('input', (e) => {
+    state.preloadDelaySecs = parseInt(e.target.value, 10) || 0;
+    $('preloadVal').textContent = state.preloadDelaySecs + 's';
+  });
+  $('preloadRange').addEventListener('change', () => saveConfig());
+
+  $('scrollDuration').addEventListener('input', () => updateTimeline());
+  $('scrollBack').addEventListener('change', () => updateTimeline());
+
+  async function signQuery(queryString, secret){
+    const enc = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    const digest = await crypto.subtle.sign('HMAC', key, enc.encode(queryString));
+    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function normalizeUrl(u){
+    u = u.trim();
+    if (!u) return '';
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return u;
+  }
+
+  // Script to force all hero and background videos to autoplay & unmute
+  function getVideoAutoplaySnippet(){
+    return `
+      (function(){
+        try {
+          var vids = document.querySelectorAll('video');
+          vids.forEach(function(v){
+            try {
+              v.muted = true;
+              v.setAttribute('muted', '');
+              v.setAttribute('autoplay', '');
+              v.setAttribute('playsinline', '');
+              v.setAttribute('loop', '');
+              v.currentTime = 0;
+              var p = v.play();
+              if (p && p.catch) p.catch(function(){});
+            } catch(e){}
+          });
+        } catch(e){}
+      })();
+    `.replace(/\s+/g, ' ').trim();
+  }
+
+  // ---------- Provider Request Builder ----------
+  async function buildRequestUrl(){
+    const site = normalizeUrl($('siteUrl').value);
+    if (!site) return { error: 'Enter a website URL first.' };
+
+    const duration = $('duration').value;
+    const heroHoldS = state.heroHoldSecs;
+    const heroHoldMs = heroHoldS * 1000;
+    const preloadS = state.preloadDelaySecs;
+    const preloadMs = preloadS * 1000;
+    const isScroll = state.scenario === 'scroll';
+    const forcePlay = $('forceVideoPlay').checked;
+    const scrollDistPx = parseInt($('scrollBy').value, 10) || 1200;
+    const scrollDurMs = parseInt($('scrollDuration').value, 10) || 2500;
+    const scrollBack = $('scrollBack').checked;
+
+    // 1. ScreenshotOne (Native scroll_start_delay ensures true hero hold + native smooth scroll)
+    if (state.provider === 'screenshotone') {
+      const cfg = state.providers.screenshotone;
+      if (!cfg.accessKey) return { error: 'ScreenshotOne access key is missing. Open settings to enter it.' };
+
+      const params = new URLSearchParams();
+      params.set('url', site);
+      params.set('access_key', cfg.accessKey);
+      params.set('format', state.format);
+      params.set('duration', duration);
+      params.set('scenario', isScroll ? 'scroll' : 'default');
+      params.set('viewport_width', String(state.viewportW));
+      params.set('viewport_height', String(state.viewportH));
+
+      if (preloadS > 0) {
+        params.set('delay', String(preloadS));
+      }
+
+      if (isScroll) {
+        params.set('scroll_start_delay', String(heroHoldMs));
+        params.set('scroll_by', String(scrollDistPx));
+        params.set('scroll_duration', String(scrollDurMs));
+        params.set('scroll_delay', $('scrollDelay').value);
+        params.set('scroll_easing', $('scrollEasing').value);
+        params.set('scroll_back', scrollBack ? 'true' : 'false');
+      }
+
+      if (forcePlay) {
+        params.set('scripts', getVideoAutoplaySnippet());
+      }
+
+      params.set('block_ads', $('blockAds').checked);
+      params.set('block_cookie_banners', $('blockCookies').checked);
+      params.set('block_chats', $('blockChats').checked);
+      params.set('block_trackers', $('blockTrackers').checked);
+
+      let queryString = params.toString();
+      if (cfg.secretKey) {
+        const signature = await signQuery(queryString, cfg.secretKey);
+        queryString += '&signature=' + signature;
+      }
+
+      return {
+        provider: 'ScreenshotOne',
+        url: 'https://api.screenshotone.com/animate?' + queryString,
+        site,
+        headers: {}
+      };
+    }
+
+    // 2. ScreenshotCore (Native auto-scroller with video autoplay trigger)
+    if (state.provider === 'screenshotcore') {
+      const cfg = state.providers.screenshotcore;
+      if (!cfg.apiKey) return { error: 'ScreenshotCore API key is missing. Open settings to enter it.' };
+
+      const format = state.format === 'mov' ? 'mp4' : state.format;
+      const base = cfg.baseUrl || 'https://screenshotcore.com/api/v1/screenshot';
+      const params = new URLSearchParams();
+      params.set('url', site);
+      params.set('format', format);
+      params.set('video_duration', String(duration));
+      
+      params.set('video_scroll', isScroll ? 'true' : 'false');
+      params.set('viewport_width', String(state.viewportW));
+      params.set('viewport_height', String(state.viewportH));
+      if (state.viewportW <= 480) params.set('viewport_mobile', 'true');
+
+      const totalWait = preloadMs + heroHoldMs;
+      if (totalWait > 0) {
+        params.set('delay', String(totalWait));
+      }
+
+      if (forcePlay) {
+        params.set('js', getVideoAutoplaySnippet());
+      }
+
+      if ($('blockAds').checked) params.set('block_ads', 'true');
+      if ($('blockCookies').checked) params.set('block_cookie_banners', 'true');
+      if ($('blockChats').checked) params.set('block_chats', 'true');
+      if ($('blockTrackers').checked) params.set('block_trackers', 'true');
+
+      params.set('access_key', cfg.apiKey);
+
+      return {
+        provider: 'ScreenshotCore',
+        url: base + '?' + params.toString(),
+        site,
+        headers: {}
+      };
+    }
+
+    // 3. Microlink
+    if (state.provider === 'microlink') {
+      const cfg = state.providers.microlink;
+      const params = new URLSearchParams();
+      params.set('url', site);
+      params.set('video', 'true');
+      params.set('meta', 'false');
+      params.set('embed', 'video.url');
+      params.set('viewport.width', String(state.viewportW));
+      params.set('viewport.height', String(state.viewportH));
+      if (isScroll) params.set('scroll', 'true');
+      
+      const totalWait = preloadMs + heroHoldMs;
+      if (totalWait > 0) params.set('waitForTimeout', String(totalWait));
+      if (forcePlay) params.set('scripts', getVideoAutoplaySnippet());
+
+      const headers = {};
+      if (cfg.apiKey) headers['x-api-key'] = cfg.apiKey;
+
+      return {
+        provider: 'Microlink',
+        url: 'https://api.microlink.io/?' + params.toString(),
+        site,
+        headers
+      };
+    }
+
+    // 4. Urlbox
+    if (state.provider === 'urlbox') {
+      const cfg = state.providers.urlbox;
+      if (!cfg.apiKey) return { error: 'Urlbox API key is missing. Open settings to enter it.' };
+
+      const format = state.format === 'mov' ? 'mp4' : state.format;
+      const params = new URLSearchParams();
+      params.set('url', site);
+      params.set('width', String(state.viewportW));
+      params.set('height', String(state.viewportH));
+      params.set('duration', String(duration));
+      
+      const totalWait = preloadMs + heroHoldMs;
+      if (totalWait > 0) params.set('delay', String(totalWait));
+      if (forcePlay) params.set('js', getVideoAutoplaySnippet());
+
+      if ($('blockAds').checked) params.set('block_ads', 'true');
+      if ($('blockCookies').checked) params.set('hide_cookie_banners', 'true');
+
+      let queryString = params.toString();
+      if (cfg.secretKey) {
+        const signature = await signQuery(queryString, cfg.secretKey);
+        queryString += '&signature=' + signature;
+      }
+
+      return {
+        provider: 'Urlbox',
+        url: `https://api.urlbox.io/v1/${encodeURIComponent(cfg.apiKey)}/${format}?${queryString}`,
+        site,
+        headers: {}
+      };
+    }
+
+    // 5. Custom / Self-Hosted Endpoint
+    if (state.provider === 'custom') {
+      const cfg = state.providers.custom;
+      if (!cfg.endpoint) return { error: 'Custom endpoint template is empty.' };
+
+      let templated = cfg.endpoint
+        .replace(/\{\{url\}\}/g, encodeURIComponent(site))
+        .replace(/\{\{hero_hold_s\}\}/g, String(heroHoldS))
+        .replace(/\{\{hero_hold_ms\}\}/g, String(heroHoldMs))
+        .replace(/\{\{preload_delay_s\}\}/g, String(preloadS))
+        .replace(/\{\{preload_delay_ms\}\}/g, String(preloadMs))
+        .replace(/\{\{delay_ms\}\}/g, String(preloadMs + heroHoldMs))
+        .replace(/\{\{duration\}\}/g, String(duration))
+        .replace(/\{\{width\}\}/g, String(state.viewportW))
+        .replace(/\{\{height\}\}/g, String(state.viewportH))
+        .replace(/\{\{format\}\}/g, state.format)
+        .replace(/\{\{scroll\}\}/g, isScroll ? 'true' : 'false')
+        .replace(/\{\{key\}\}/g, encodeURIComponent(cfg.apiKey || ''));
+
+      return {
+        provider: 'Custom',
+        url: templated,
+        site,
+        headers: {}
+      };
+    }
+
+    return { error: 'Unknown API provider selected.' };
+  }
+
+  // ---------- Viewfinder states ----------
+  function setViewfinder(mode, opts){
+    opts = opts || {};
+    const body = $('vfBody');
+    const rec = $('vfRec');
+    const recLabel = $('vfRecLabel');
+    const meta = $('vfMeta');
+    const tapeFill = $('tapeFill');
+
+    const existingVideo = $('viewfinder').querySelector('video.vf-video');
+    if (existingVideo && mode !== 'playing') existingVideo.remove();
+
+    if (mode === 'idle') {
+      body.style.display = 'flex';
+      body.className = 'vf-body idle';
+      body.innerHTML = '<div class="big-icon">▢</div><p>Configure your URL and options above, then hit Record.</p>';
+      rec.classList.remove('live');
+      recLabel.textContent = 'STANDBY';
+      meta.textContent = '—';
+      tapeFill.style.width = '0%';
+    }
+    if (mode === 'loading') {
+      body.style.display = 'flex';
+      body.className = 'vf-body';
+      const delayInfo = state.heroHoldSecs > 0 ? ` (Holding ${state.heroHoldSecs}s at hero)` : '';
+      body.innerHTML = '<div class="big-icon">' + opts.elapsed + 's</div><p>Rendering via ' + opts.provider + delayInfo + ' — this takes a few seconds longer than the capture duration.</p>';
+      rec.classList.add('live');
+      recLabel.textContent = 'REC';
+      meta.textContent = opts.meta || '';
+    }
+    if (mode === 'error') {
+      body.style.display = 'flex';
+      body.className = 'vf-body error';
+      body.innerHTML = '<div class="big-icon">✕</div><p>' + opts.message + '</p>';
+      rec.classList.remove('live');
+      recLabel.textContent = 'FAILED';
+      tapeFill.style.width = '0%';
+    }
+    if (mode === 'playing') {
+      body.style.display = 'none';
+      rec.classList.remove('live');
+      recLabel.textContent = 'READY';
+      meta.textContent = opts.meta || '';
+      tapeFill.style.width = '100%';
+      if (!$('viewfinder').querySelector('video.vf-video')) {
+        const video = document.createElement('video');
+        video.className = 'vf-video';
+        video.controls = true;
+        video.src = opts.src;
+        video.autoplay = true;
+        video.loop = true;
+        $('viewfinder').insertBefore(video, $('viewfinder').querySelector('.tape-track'));
+      }
+    }
+  }
+
+  // ---------- Record flow ----------
+  $('recordBtn').addEventListener('click', async () => {
+    const built = await buildRequestUrl();
+    if (built.error) {
+      setViewfinder('error', { message: built.error });
+      return;
+    }
+
+    $('inspectorContainer').style.display = 'block';
+    $('urlInspector').textContent = built.url;
+
+    if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    $('downloadBtn').style.display = 'none';
+    $('openBtn').style.display = 'none';
+    $('recordBtn').disabled = true;
+
+    const metaLabel = `${built.provider.toUpperCase()} · ${state.format.toUpperCase()} · ${state.viewportW}×${state.viewportH}${state.heroHoldSecs > 0 ? ' · ' + state.heroHoldSecs + 's HERO' : ''}`;
+    let elapsed = 0;
+    setViewfinder('loading', { elapsed, provider: built.provider, meta: metaLabel });
+    
+    const estimatedTotal = parseInt($('duration').value, 10) + state.preloadDelaySecs + 4;
+    elapsedTimer = setInterval(() => {
+      elapsed += 1;
+      const pct = Math.min(95, (elapsed / estimatedTotal) * 100);
+      $('tapeFill').style.width = pct + '%';
+      setViewfinder('loading', { elapsed, provider: built.provider, meta: metaLabel });
+    }, 1000);
+
+    try {
+      const response = await fetch(built.url, {
+        headers: built.headers || {}
+      });
+      const contentType = response.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        const foundUrl = (data.data && data.data.video && data.data.video.url) ||
+                         data.video_url || data.url || (data.data && data.data.url) ||
+                         data.result || data.download_url;
+
+        if (foundUrl) {
+          clearInterval(elapsedTimer);
+          setViewfinder('playing', { src: foundUrl, meta: metaLabel });
+          $('downloadBtn').style.display = 'inline-block';
+          $('openBtn').style.display = 'inline-block';
+          $('downloadBtn').onclick = () => window.open(foundUrl, '_blank');
+          $('openBtn').onclick = () => window.open(foundUrl, '_blank');
+          recordToHistory(built, foundUrl);
+          return;
+        }
+
+        throw new Error(data.error_message || data.message || data.error || 'The API returned an error response.');
+      }
+
+      if (!response.ok) {
+        throw new Error(`${built.provider} error (status ${response.status}). Click "Open direct link" to inspect.`);
+      }
+
+      const blob = await response.blob();
+      currentObjectUrl = URL.createObjectURL(blob);
+      clearInterval(elapsedTimer);
+
+      setViewfinder('playing', { src: currentObjectUrl, meta: metaLabel });
+
+      $('downloadBtn').style.display = 'inline-block';
+      $('openBtn').style.display = 'inline-block';
+      $('downloadBtn').onclick = () => {
+        const a = document.createElement('a');
+        a.href = currentObjectUrl;
+        a.download = `WebScreenRecorder-${state.provider}-${Date.now()}.${state.format}`;
+        a.click();
+      };
+      $('openBtn').onclick = () => window.open(built.url, '_blank');
+
+      recordToHistory(built, built.url);
+
+    } catch (err) {
+      clearInterval(elapsedTimer);
+      const video = document.createElement('video');
+      video.className = 'vf-video';
+      video.controls = true;
+      video.autoplay = true;
+      video.loop = true;
+      video.src = built.url;
+      video.onloadeddata = () => {
+        $('vfBody').style.display = 'none';
+        $('vfRecLabel').textContent = 'READY';
+        $('tapeFill').style.width = '100%';
+        $('downloadBtn').style.display = 'inline-block';
+        $('openBtn').style.display = 'inline-block';
+        $('downloadBtn').onclick = () => window.open(built.url, '_blank');
+        $('openBtn').onclick = () => window.open(built.url, '_blank');
+        recordToHistory(built, built.url);
+      };
+      video.onerror = () => {
+        setViewfinder('error', { message: `${built.provider}: ${err.message || "Failed to render video"}. Check your API key and URL.` });
+        $('openBtn').style.display = 'inline-block';
+        $('openBtn').onclick = () => window.open(built.url, '_blank');
+      };
+      $('viewfinder').insertBefore(video, $('viewfinder').querySelector('.tape-track'));
+    } finally {
+      $('recordBtn').disabled = false;
+    }
+  });
+
+  async function recordToHistory(built, directUrl){
+    state.history.unshift({
+      provider: built.provider,
+      site: built.site,
+      format: state.format,
+      viewport: state.viewportW + '×' + state.viewportH,
+      heroHold: state.heroHoldSecs,
+      duration: $('duration').value,
+      timestamp: Date.now(),
+      directUrl: directUrl
+    });
+    await saveHistory();
+    renderFilmstrip();
+  }
+
+  // ---------- Filmstrip ----------
+  function renderFilmstrip(){
+    const el = $('filmstrip');
+    if (!state.history.length) {
+      el.innerHTML = '<p class="empty-note" id="emptyNote">Nothing recorded yet — your recent captures will show up here.</p>';
+      return;
+    }
+    el.innerHTML = '';
+    state.history.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'reel-card';
+      const when = new Date(item.timestamp);
+      const delayBadge = item.heroHold ? ` · ${item.heroHold}s hero` : '';
+      card.innerHTML =
+        '<div class="reel-header">' +
+          '<span class="reel-fmt">' + item.format + ' · ' + item.viewport + '</span>' +
+          '<span class="reel-provider">' + (item.provider || 'REC') + '</span>' +
+        '</div>' +
+        '<div class="reel-url">' + item.site.replace(/^https?:\/\//, '') + '</div>' +
+        '<div class="reel-meta">' + when.toLocaleDateString() + ' ' + when.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + delayBadge + '</div>';
+      card.addEventListener('click', () => window.open(item.directUrl, '_blank'));
+      el.appendChild(card);
+    });
+  }
+
+  // ---------- Init ----------
+  loadConfig();
+  loadHistory();
+})();
+</script>
+</body>
+</html>
