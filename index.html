@@ -1185,27 +1185,29 @@
     </details>
   </div>
 
-  <!-- Viewfinder -->
-  <div class="viewfinder" id="viewfinder">
-    <div class="vf-corner tl"></div>
-    <div class="vf-corner tr"></div>
-    <div class="vf-corner bl"></div>
-    <div class="vf-corner br"></div>
-    <div class="vf-hud">
-      <span class="vf-rec" id="vfRec"><span class="dot"></span><span id="vfRecLabel">STANDBY</span></span>
-      <span id="vfMeta">—</span>
+  <!-- Viewfinder & Record Section -->
+  <div id="stageViewfinderWrap">
+    <div class="viewfinder" id="viewfinder">
+      <div class="vf-corner tl"></div>
+      <div class="vf-corner tr"></div>
+      <div class="vf-corner bl"></div>
+      <div class="vf-corner br"></div>
+      <div class="vf-hud">
+        <span class="vf-rec" id="vfRec"><span class="dot"></span><span id="vfRecLabel">STANDBY</span></span>
+        <span id="vfMeta">—</span>
+      </div>
+      <div class="vf-body idle" id="vfBody">
+        <div class="big-icon">▢</div>
+        <p>Configure your URL and options above, then hit Record.</p>
+      </div>
+      <div class="tape-track"><div class="tape-fill" id="tapeFill"></div></div>
     </div>
-    <div class="vf-body idle" id="vfBody">
-      <div class="big-icon">▢</div>
-      <p>Configure your URL and options above, then hit Record.</p>
-    </div>
-    <div class="tape-track"><div class="tape-fill" id="tapeFill"></div></div>
-  </div>
 
-  <div class="record-bar" id="recordBar">
-    <button class="btn primary" id="recordBtn" type="button">● Record Video</button>
-    <button class="btn" id="downloadBtn" type="button" style="display:none;">Download</button>
-    <button class="btn" id="openBtn" type="button" style="display:none;">Open direct link</button>
+    <div class="record-bar" id="recordBar">
+      <button class="btn primary" id="recordBtn" type="button">● Record Video</button>
+      <button class="btn" id="downloadBtn" type="button" style="display:none;">Download</button>
+      <button class="btn" id="openBtn" type="button" style="display:none;">Open direct link</button>
+    </div>
   </div>
 
   <div id="inspectorContainer" style="display:none; margin-bottom: 20px;">
@@ -1493,10 +1495,10 @@
       text: 'Switch between Desktop, Tablet, or Mobile aspect ratios, and choose MP4, WebM, or GIF export.'
     },
     {
-      target: () => $('recordBar'),
+      target: () => $('stageViewfinderWrap') || $('viewfinder'),
       badge: 'Stage 5 of 5 · Viewfinder & Export',
-      title: 'Hit Record & Download',
-      text: 'Watch the rendering in the retro viewfinder, preview the live capture, and download directly!'
+      title: 'Hit Record & Instant Preview',
+      text: 'Click ● Record Video to start capturing! Watch the live preview in the viewfinder and download your recording in MP4, WebM, or GIF.'
     }
   ];
 
@@ -1510,7 +1512,7 @@
 
     setTimeout(() => {
       const rect = targetEl.getBoundingClientRect();
-      const pad = 8;
+      const pad = 10;
       const top = Math.max(0, rect.top - pad);
       const left = Math.max(0, rect.left - pad);
       const width = rect.width + (pad * 2);
@@ -1543,8 +1545,8 @@
       if (ttLeft < 16) ttLeft = 16;
       if (ttLeft + 320 > window.innerWidth) ttLeft = window.innerWidth - 336;
 
-      if (ttTop + 160 > window.innerHeight) {
-        ttTop = Math.max(16, top - 160);
+      if (ttTop + 170 > window.innerHeight) {
+        ttTop = Math.max(16, top - 165);
       }
 
       spotlightTooltip.style.top = ttTop + 'px';
@@ -1560,6 +1562,7 @@
   function stopSpotlightTour(){
     spotlightOverlay.classList.remove('active');
     localStorage.setItem('rec_spotlight_seen', 'true');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   tourBtn.addEventListener('click', startSpotlightTour);
