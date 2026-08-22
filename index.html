@@ -213,11 +213,42 @@
   }
 
   #themeToggle {
-    position: relative;
-    z-index: 210;
+    position: fixed;
+    top: 18px;
+    right: 20px;
+    z-index: 220;
     pointer-events: auto;
-    font-size: 14px;
-    padding: 7px 11px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    background: var(--panel);
+    color: var(--paper);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+  }
+  #themeToggle:hover {
+    background: var(--panel-2);
+    border-color: var(--tape);
+    transform: scale(1.08);
+    box-shadow: 0 0 15px rgba(217, 164, 65, 0.4);
+  }
+
+  @media (max-width: 640px) {
+    #themeToggle {
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      font-size: 15px;
+    }
   }
 
   .conn-pill {
