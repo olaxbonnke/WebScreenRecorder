@@ -212,6 +212,14 @@
     border-color: var(--tape);
   }
 
+  #themeToggle {
+    position: relative;
+    z-index: 210;
+    pointer-events: auto;
+    font-size: 14px;
+    padding: 7px 11px;
+  }
+
   .conn-pill {
     font-family: var(--mono);
     font-size: 11px;
@@ -1104,6 +1112,10 @@
       </div>
     </div>
     <div class="header-actions">
+      <!-- Theme Switcher (Clickable at all screens except preload) -->
+      <button class="btn-icon" id="themeToggle" type="button" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
+        <span id="themeIcon">☀️</span>
+      </button>
       <!-- Interactive Spotlight Tour Trigger -->
       <button class="btn-icon" id="tourBtn" type="button" title="Interactive Walkthrough" aria-label="Start Tour">
         <span>✨ Quick Tour</span>
@@ -1111,10 +1123,6 @@
       <!-- Docs Modal Trigger -->
       <button class="btn-icon" id="docsBtn" type="button" title="Documentation & FAQs" aria-label="Open Docs">
         <span>📖 Docs</span>
-      </button>
-      <!-- Theme Switcher -->
-      <button class="btn-icon" id="themeToggle" type="button" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
-        <span id="themeIcon">☀️</span>
       </button>
       <!-- Connection Pill -->
       <button class="conn-pill" id="connPill" type="button">
