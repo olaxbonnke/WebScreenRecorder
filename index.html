@@ -1181,6 +1181,14 @@
     syncInputsFromState();
     refreshConnectionUI();
     updateTimeline();
+
+    const p = state.provider;
+    const isConnected = (p === 'microlink') ||
+                        (p === 'screenshotone' && Boolean(state.providers.screenshotone.accessKey)) ||
+                        (p === 'screenshotcore' && Boolean(state.providers.screenshotcore.apiKey)) ||
+                        (p === 'urlbox' && Boolean(state.providers.urlbox.apiKey)) ||
+                        (p === 'custom' && Boolean(state.providers.custom.endpoint));
+    $('setupPanel').style.display = isConnected ? 'none' : 'block';
   }
 
   async function saveConfig(){
@@ -1269,12 +1277,6 @@
 
     pill.classList.toggle('on', isConnected);
     label.textContent = desc;
-
-    if (!isConnected && p !== 'microlink') {
-      $('setupPanel').style.display = 'block';
-    } else {
-      $('setupPanel').style.display = 'none';
-    }
   }
 
   $('connPill').addEventListener('click', () => {
@@ -1322,6 +1324,7 @@
     err.style.display = 'none';
     await saveConfig();
     refreshConnectionUI();
+    $('setupPanel').style.display = 'none';
   });
 
   document.querySelectorAll('#customPresets .chip').forEach(btn => {
