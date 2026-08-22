@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://webscreenrecorder.vercel.app/sitemap.xml
+Sitemap: https://webrecordtool.vercel.app/sitemap.xml

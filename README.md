@@ -1,11 +1,11 @@
-# WebScreenRecorder 🎥
+# Web-Record tool 🎥
 
 > **Cinematic Website Video Recorder & Animation Capture Suite.**
 > Capture smooth scrolling videos, product demos, and animated hero sections from any URL with multi-engine API support, customizable hero hold duration, and HTML5 video autoplay.
 
 [![Made with Love by Bonnke](https://img.shields.io/badge/Made%20with%20%E2%9D%A4%EF%B8%8F%20by-Bonnke-d9a441?style=for-the-badge&logo=vercel)](https://bonnke-dev.vercel.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Deployment: Vercel](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com)
+[![Deployment: Vercel](https://img.shields.io/badge/Deploy-Vercel-black?style=for-the-badge&logo=vercel)](https://webrecordtool.vercel.app/)
 
 ---
 
@@ -41,12 +41,12 @@
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/Bonnke/WebScreenRecorder.git
+git clone https://github.com/olaxbonnke/WebScreenRecorder.git
 cd WebScreenRecorder
 ```
 
 ### 2. Run with any local server
-Because WebScreenRecorder is built as a zero-dependency static web application, you can run it with Python, Node, or VS Code Live Server:
+Because Web-Record tool is built as a zero-dependency static web application, you can run it with Python, Node, or VS Code Live Server:
 
 ```bash
 # Using Python
@@ -84,7 +84,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 1. Push your repository to GitHub:
    ```bash
    git add .
-   git commit -m "Initial commit: WebScreenRecorder"
+   git commit -m "Update app branding to Web-Record tool"
    git push origin main
    ```
 2. Go to [vercel.com](https://vercel.com) and click **"Add New Project"**.
@@ -100,13 +100,13 @@ This project includes pre-built SEO assets for top search engine visibility:
 
 1. **Verify Ownership**:
    - Go to [Google Search Console](https://search.google.com/search-console).
-   - Add your live Vercel domain (e.g. `https://webscreenrecorder.vercel.app/`).
+   - Add your live Vercel domain (e.g. `https://webrecordtool.vercel.app/`).
    - Complete HTML tag verification or DNS verification.
 2. **Submit Sitemap**:
    - In Search Console, navigate to **Sitemaps** on the left menu.
    - Enter `sitemap.xml` and click **Submit**.
 3. **Test Robots.txt**:
-   - Verify `https://your-domain.vercel.app/robots.txt` is accessible and returns `Allow: /`.
+   - Verify `https://webrecordtool.vercel.app/robots.txt` is accessible and returns `Allow: /`.
 
 ---
 
@@ -115,8 +115,8 @@ This project includes pre-built SEO assets for top search engine visibility:
 Crafted with ❤️ by **Bonnke**
 
 - 🌐 **Portfolio**: [https://bonnke-dev.vercel.app/](https://bonnke-dev.vercel.app/)
-- 🐙 **GitHub Profile**: [@Bonnke](https://github.com/Bonnke)
-- ⭐ **Repository**: [WebScreenRecorder on GitHub](https://github.com/Bonnke/WebScreenRecorder)
+- 🐙 **GitHub Profile**: [@olaxbonnke](https://github.com/olaxbonnke)
+- ⭐ **Repository**: [WebScreenRecorder on GitHub](https://github.com/olaxbonnke/WebScreenRecorder)
 
 ---
 
