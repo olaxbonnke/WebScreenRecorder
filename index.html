@@ -654,12 +654,13 @@
 
   #spotlightTooltip {
     position: absolute;
-    width: 320px;
+    width: 380px;
+    max-width: calc(100vw - 32px);
     background: var(--panel);
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.6);
+    border: 1px solid var(--tape);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.7), 0 0 25px rgba(217,164,65,0.25);
     pointer-events: auto;
     z-index: 205;
     transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -668,62 +669,85 @@
 
   .sp-badge {
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 600;
     color: var(--tape);
-    background: rgba(217,164,65,0.15);
+    background: rgba(217,164,65,0.18);
     border: 1px solid var(--tape-dim);
-    padding: 2px 7px;
+    padding: 3px 9px;
     border-radius: 4px;
     display: inline-block;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    letter-spacing: 0.04em;
   }
   .sp-title {
     font-family: var(--sans);
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     color: var(--paper);
   }
   .sp-text {
-    font-size: 12.5px;
-    color: var(--mute);
-    line-height: 1.5;
-    margin: 0 0 14px;
+    font-size: 13.5px;
+    color: var(--paper);
+    opacity: 0.92;
+    line-height: 1.6;
+    margin: 0 0 18px;
   }
   .sp-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-strong);
+    gap: 12px;
   }
   .sp-skip {
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--mute);
-    background: transparent;
-    border: none;
+    background: var(--panel-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 8px 14px;
     cursor: pointer;
-    padding: 4px 6px;
+    transition: all 0.15s ease;
   }
-  .sp-skip:hover { color: var(--paper); }
+  .sp-skip:hover {
+    background: rgba(255,68,51,0.15);
+    color: var(--signal);
+    border-color: var(--signal);
+  }
   .sp-nav-btns {
     display: flex;
-    gap: 6px;
+    gap: 8px;
   }
   .sp-btn {
     font-family: var(--mono);
-    font-size: 11px;
-    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 16px;
     border-radius: 6px;
     border: 1px solid var(--line-strong);
     background: var(--panel-2);
     color: var(--paper);
     cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .sp-btn:hover {
+    background: var(--panel);
+    border-color: var(--tape);
   }
   .sp-btn.primary {
     background: var(--tape);
     border-color: var(--tape);
     color: #121316;
-    font-weight: 600;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(217, 164, 65, 0.35);
+  }
+  .sp-btn.primary:hover {
+    background: #e6b355;
+    transform: translateY(-1px);
   }
 
   /* ---------- Docs Modal ---------- */
@@ -1539,14 +1563,14 @@
       spNextBtn.textContent = tourIndex === tourStages.length - 1 ? 'Finish 🎉' : 'Next →';
 
       // Tooltip position
-      let ttTop = top + height + 12;
-      let ttLeft = left + (width / 2) - 160;
+      let ttTop = top + height + 14;
+      let ttLeft = left + (width / 2) - 190;
 
       if (ttLeft < 16) ttLeft = 16;
-      if (ttLeft + 320 > window.innerWidth) ttLeft = window.innerWidth - 336;
+      if (ttLeft + 390 > window.innerWidth) ttLeft = Math.max(16, window.innerWidth - 400);
 
-      if (ttTop + 170 > window.innerHeight) {
-        ttTop = Math.max(16, top - 165);
+      if (ttTop + 210 > window.innerHeight) {
+        ttTop = Math.max(16, top - 210);
       }
 
       spotlightTooltip.style.top = ttTop + 'px';
@@ -1561,7 +1585,6 @@
 
   function stopSpotlightTour(){
     spotlightOverlay.classList.remove('active');
-    localStorage.setItem('rec_spotlight_seen', 'true');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1588,10 +1611,8 @@
     }
   });
 
-  // Auto-trigger spotlight on first visit
-  if (!localStorage.getItem('rec_spotlight_seen')) {
-    setTimeout(startSpotlightTour, 800);
-  }
+  // Auto-trigger spotlight tour on load / reload
+  setTimeout(startSpotlightTour, 600);
 
   // ---------- Application State & Core ----------
   const state = {
