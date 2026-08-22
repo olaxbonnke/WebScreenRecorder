@@ -216,10 +216,10 @@
     position: fixed;
     top: 18px;
     right: 20px;
-    z-index: 220;
+    z-index: 10000000;
     pointer-events: auto;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 1px solid var(--line-strong);
     background: var(--panel);
@@ -1091,6 +1091,11 @@
 </style>
 </head>
 <body>
+<!-- Theme Switcher (Clickable on all screens, including preload and walkthrough) -->
+<button id="themeToggle" type="button" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
+  <span id="themeIcon">☀️</span>
+</button>
+
 <!-- 2-Second Frosted Glass Preloader Screen (Logo Alone on Frost Glass) -->
 <div id="preloaderScreen" aria-label="Loading Web-Record tool">
   <div class="preloader-glass">
@@ -1143,10 +1148,6 @@
       </div>
     </div>
     <div class="header-actions">
-      <!-- Theme Switcher (Clickable at all screens except preload) -->
-      <button class="btn-icon" id="themeToggle" type="button" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
-        <span id="themeIcon">☀️</span>
-      </button>
       <!-- Interactive Spotlight Tour Trigger -->
       <button class="btn-icon" id="tourBtn" type="button" title="Interactive Walkthrough" aria-label="Start Tour">
         <span>✨ Quick Tour</span>
