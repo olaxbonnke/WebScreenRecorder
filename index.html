@@ -630,41 +630,51 @@
   #spotlightBlurLayer {
     position: fixed;
     inset: 0;
-    background: rgba(10, 11, 14, 0.74);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.35)), rgba(15, 17, 23, 0.68);
+    backdrop-filter: blur(16px) saturate(180%) contrast(95%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%) contrast(95%);
     mask: url(#spotlightMask);
     -webkit-mask: url(#spotlightMask);
     z-index: 201;
     pointer-events: auto;
   }
 
+  [data-theme="light"] #spotlightBlurLayer {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(240, 240, 245, 0.4)), rgba(240, 242, 248, 0.58);
+    backdrop-filter: blur(16px) saturate(180%) contrast(95%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%) contrast(95%);
+  }
+
   #spotlightHole {
-    position: absolute;
+    position: fixed;
     border: 2.5px solid var(--tape);
     border-radius: 12px;
     box-shadow: 0 0 24px rgba(217, 164, 65, 0.55);
     pointer-events: none;
     z-index: 202;
-    transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.15s ease, height 0.15s ease;
   }
 
   #spotlightTooltip {
-    position: absolute;
+    position: fixed;
     width: 380px;
     max-width: calc(100vw - 32px);
-    background: var(--panel);
-    border: 1px solid var(--tape);
+    background: rgba(22, 24, 31, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(217, 164, 65, 0.6);
     border-radius: 14px;
     padding: 20px 22px;
-    box-shadow: 0 16px 45px rgba(0,0,0,0.7), 0 0 25px rgba(217,164,65,0.25);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 25px rgba(217, 164, 65, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     pointer-events: auto;
     z-index: 205;
-    transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.15s ease;
+  }
+
+  [data-theme="light"] #spotlightTooltip {
+    background: rgba(255, 255, 255, 0.88);
+    border-color: rgba(184, 134, 11, 0.55);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18), 0 0 20px rgba(217, 164, 65, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
   .sp-badge {
@@ -1526,65 +1536,88 @@
     }
   ];
 
+  function syncSpotlightRect(){
+    if (!spotlightOverlay.classList.contains('active')) return;
+    const stage = tourStages[tourIndex];
+    if (!stage) return;
+    const targetEl = stage.target();
+    if (!targetEl) return;
+
+    const rect = targetEl.getBoundingClientRect();
+    const pad = 10;
+    const top = Math.max(4, rect.top - pad);
+    const left = Math.max(4, rect.left - pad);
+    const width = rect.width + (pad * 2);
+    const height = rect.height + (pad * 2);
+
+    spotlightHole.style.top = top + 'px';
+    spotlightHole.style.left = left + 'px';
+    spotlightHole.style.width = width + 'px';
+    spotlightHole.style.height = height + 'px';
+
+    const maskHole = $('spotlightMaskHole');
+    if (maskHole) {
+      maskHole.setAttribute('x', left);
+      maskHole.setAttribute('y', top);
+      maskHole.setAttribute('width', width);
+      maskHole.setAttribute('height', height);
+    }
+
+    // Tooltip position (adaptive above/below target based on available space)
+    let ttLeft = left + (width / 2) - 190;
+    if (ttLeft < 16) ttLeft = 16;
+    if (ttLeft + 390 > window.innerWidth) ttLeft = Math.max(16, window.innerWidth - 400);
+
+    const tooltipHeight = 220;
+    let ttTop;
+    if (top + height + 16 + tooltipHeight <= window.innerHeight) {
+      ttTop = top + height + 16;
+    } else if (top - 16 - tooltipHeight >= 10) {
+      ttTop = top - 16 - tooltipHeight;
+    } else {
+      ttTop = Math.max(12, Math.min(top + height + 10, window.innerHeight - tooltipHeight - 12));
+    }
+
+    spotlightTooltip.style.top = ttTop + 'px';
+    spotlightTooltip.style.left = ttLeft + 'px';
+  }
+
   function positionSpotlight(index){
     tourIndex = index;
     const stage = tourStages[index];
     const targetEl = stage.target();
     if (!targetEl) return;
 
+    spBadge.textContent = stage.badge;
+    spTitle.textContent = stage.title;
+    spText.textContent = stage.text;
+    spPrevBtn.style.display = tourIndex > 0 ? 'inline-block' : 'none';
+    spNextBtn.textContent = tourIndex === tourStages.length - 1 ? 'Finish 🎉' : 'Next →';
+
     targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    setTimeout(() => {
-      const rect = targetEl.getBoundingClientRect();
-      const pad = 10;
-      const top = Math.max(0, rect.top - pad);
-      const left = Math.max(0, rect.left - pad);
-      const width = rect.width + (pad * 2);
-      const height = rect.height + (pad * 2);
-
-      spotlightHole.style.top = top + 'px';
-      spotlightHole.style.left = left + 'px';
-      spotlightHole.style.width = width + 'px';
-      spotlightHole.style.height = height + 'px';
-
-      const maskHole = $('spotlightMaskHole');
-      if (maskHole) {
-        maskHole.setAttribute('x', left);
-        maskHole.setAttribute('y', top);
-        maskHole.setAttribute('width', width);
-        maskHole.setAttribute('height', height);
+    // Smoothly track element throughout smooth scroll animation
+    const startTime = performance.now();
+    function trackDuringScroll(now){
+      syncSpotlightRect();
+      if (now - startTime < 850 && spotlightOverlay.classList.contains('active')) {
+        requestAnimationFrame(trackDuringScroll);
       }
-
-      spBadge.textContent = stage.badge;
-      spTitle.textContent = stage.title;
-      spText.textContent = stage.text;
-
-      spPrevBtn.style.display = tourIndex > 0 ? 'inline-block' : 'none';
-      spNextBtn.textContent = tourIndex === tourStages.length - 1 ? 'Finish 🎉' : 'Next →';
-
-      // Tooltip position
-      let ttTop = top + height + 14;
-      let ttLeft = left + (width / 2) - 190;
-
-      if (ttLeft < 16) ttLeft = 16;
-      if (ttLeft + 390 > window.innerWidth) ttLeft = Math.max(16, window.innerWidth - 400);
-
-      if (ttTop + 210 > window.innerHeight) {
-        ttTop = Math.max(16, top - 210);
-      }
-
-      spotlightTooltip.style.top = ttTop + 'px';
-      spotlightTooltip.style.left = ttLeft + 'px';
-    }, 200);
+    }
+    requestAnimationFrame(trackDuringScroll);
   }
 
   function startSpotlightTour(){
     spotlightOverlay.classList.add('active');
+    window.addEventListener('scroll', syncSpotlightRect, { passive: true });
+    window.addEventListener('resize', syncSpotlightRect);
     positionSpotlight(0);
   }
 
   function stopSpotlightTour(){
     spotlightOverlay.classList.remove('active');
+    window.removeEventListener('scroll', syncSpotlightRect);
+    window.removeEventListener('resize', syncSpotlightRect);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1602,12 +1635,6 @@
   spPrevBtn.addEventListener('click', () => {
     if (tourIndex > 0) {
       positionSpotlight(tourIndex - 1);
-    }
-  });
-
-  window.addEventListener('resize', () => {
-    if (spotlightOverlay.classList.contains('active')) {
-      positionSpotlight(tourIndex);
     }
   });
 
