@@ -920,9 +920,121 @@
     opacity: 0.7;
     margin-top: 6px;
   }
+
+  /* ---------- 2-Sec Frosted Glass Preloader Screen ---------- */
+  #preloaderScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 11, 14, 0.45);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.45s ease;
+  }
+  #preloaderScreen.hide {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  [data-theme="light"] #preloaderScreen {
+    background: rgba(240, 242, 248, 0.45);
+  }
+
+  .preloader-glass {
+    padding: 38px 48px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.3)), rgba(20, 22, 28, 0.78);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(217, 164, 65, 0.5);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(217, 164, 65, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: preloaderCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  [data-theme="light"] .preloader-glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 240, 245, 0.6)), rgba(255, 255, 255, 0.88);
+    border-color: rgba(184, 134, 11, 0.45);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15), 0 0 30px rgba(217, 164, 65, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  @keyframes preloaderCardPop {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .preloader-logo-svg {
+    width: 76px;
+    height: 76px;
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+    margin-bottom: 12px;
+  }
+
+  .logo-spinner {
+    transform-origin: 36px 36px;
+    animation: spinReel 5s linear infinite;
+  }
+  @keyframes spinReel {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .logo-pulse {
+    animation: pulseDot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.15); opacity: 1; }
+  }
+
+  .preloader-bar-wrap {
+    width: 90px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .preloader-bar {
+    width: 0%;
+    height: 100%;
+    background: var(--tape);
+    border-radius: 99px;
+    transition: width 1.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 </style>
 </head>
 <body>
+<!-- 2-Second Frosted Glass Preloader Screen (Logo Alone on Frost Glass) -->
+<div id="preloaderScreen" aria-label="Loading Web-Record tool">
+  <div class="preloader-glass">
+    <svg class="preloader-logo-svg" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="72" height="72" rx="18" fill="url(#preload_grad)" />
+      <circle cx="36" cy="36" r="22" stroke="#d9a441" stroke-width="4.5" stroke-dasharray="6 4" class="logo-spinner" />
+      <circle cx="36" cy="36" r="10" fill="#ff4433" class="logo-pulse" />
+      <circle cx="56" cy="16" r="4.5" fill="#7ed988" />
+      <defs>
+        <linearGradient id="preload_grad" x1="0" y1="0" x2="72" y2="72" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#2a2d35" />
+          <stop offset="1" stop-color="#0f1013" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="preloader-bar-wrap">
+      <div class="preloader-bar" id="preloaderBar"></div>
+    </div>
+  </div>
+</div>
 
 <!-- Interactive Particle & Dot Grid Canvas -->
 <canvas id="bgCanvas"></canvas>
@@ -1643,8 +1755,23 @@
     }
   });
 
-  // Auto-trigger spotlight tour on load / reload
-  setTimeout(startSpotlightTour, 600);
+  // 2-Sec Frosted Glass Preloader Screen -> Onboarding Tour Sequence
+  const preloaderScreen = $('preloaderScreen');
+  const preloaderBar = $('preloaderBar');
+
+  if (preloaderBar) {
+    setTimeout(() => {
+      preloaderBar.style.width = '100%';
+    }, 60);
+  }
+
+  setTimeout(() => {
+    if (preloaderScreen) {
+      preloaderScreen.classList.add('hide');
+    }
+    // Launch onboarding spotlight tour right after preloader finishes
+    setTimeout(startSpotlightTour, 300);
+  }, 2000);
 
   // ---------- Application State & Core ----------
   const state = {
