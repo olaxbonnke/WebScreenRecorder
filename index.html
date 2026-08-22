@@ -612,7 +612,108 @@
     margin-top: 10px;
   }
 
-  /* ---------- Modal & Onboarding Tour ---------- */
+  /* ---------- Live Spotlight Onboarding Tour ---------- */
+  #spotlightOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+  #spotlightOverlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #spotlightHole {
+    position: absolute;
+    border: 2px solid var(--tape);
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(10, 11, 14, 0.82), 0 0 24px rgba(217, 164, 65, 0.45);
+    pointer-events: auto;
+    transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #spotlightTooltip {
+    position: absolute;
+    width: 320px;
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.6);
+    pointer-events: auto;
+    z-index: 205;
+    transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .sp-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--tape);
+    background: rgba(217,164,65,0.15);
+    border: 1px solid var(--tape-dim);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+  .sp-title {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--paper);
+  }
+  .sp-text {
+    font-size: 12.5px;
+    color: var(--mute);
+    line-height: 1.5;
+    margin: 0 0 14px;
+  }
+  .sp-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .sp-skip {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--mute);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .sp-skip:hover { color: var(--paper); }
+  .sp-nav-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .sp-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--line-strong);
+    background: var(--panel-2);
+    color: var(--paper);
+    cursor: pointer;
+  }
+  .sp-btn.primary {
+    background: var(--tape);
+    border-color: var(--tape);
+    color: #121316;
+    font-weight: 600;
+  }
+
+  /* ---------- Docs Modal ---------- */
   .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -682,151 +783,10 @@
     background: var(--panel-2);
     color: var(--paper);
   }
-  .modal-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--line);
-    background: var(--panel-2);
-  }
-  .modal-tab-btn {
-    font-family: var(--mono);
-    font-size: 11.5px;
-    padding: 6px 14px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--mute);
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-  .modal-tab-btn:hover {
-    color: var(--paper);
-  }
-  .modal-tab-btn.active {
-    background: var(--panel);
-    border-color: var(--tape);
-    color: var(--tape);
-    font-weight: 600;
-  }
   .modal-body {
     padding: 22px;
     overflow-y: auto;
     flex: 1;
-  }
-  .tour-step {
-    display: none;
-    animation: tourFade 0.25s ease;
-  }
-  .tour-step.active {
-    display: block;
-  }
-  @keyframes tourFade {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .tour-badge {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 10.5px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: rgba(217,164,65,0.15);
-    color: var(--tape);
-    border: 1px solid var(--tape-dim);
-    margin-bottom: 10px;
-    letter-spacing: 0.04em;
-  }
-  .tour-title {
-    font-size: 19px;
-    font-weight: 700;
-    margin: 0 0 8px;
-    color: var(--paper);
-  }
-  .tour-desc {
-    font-size: 13.5px;
-    color: var(--mute);
-    line-height: 1.6;
-    margin: 0 0 16px;
-  }
-  .tour-card-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  @media (max-width: 540px) { .tour-card-grid { grid-template-columns: 1fr; } }
-  .tour-mini-card {
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 12px;
-  }
-  .tour-mini-card h4 {
-    margin: 0 0 4px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--tape);
-  }
-  .tour-mini-card p {
-    margin: 0;
-    font-size: 12px;
-    color: var(--mute);
-    line-height: 1.4;
-  }
-  .tour-tip-box {
-    background: rgba(56,189,248,0.08);
-    border: 1px solid rgba(56,189,248,0.25);
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 12.5px;
-    color: var(--paper);
-    line-height: 1.5;
-    margin-top: 14px;
-  }
-  .tour-tip-box strong {
-    color: var(--cyan);
-  }
-  .tour-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-top: 1px solid var(--line);
-    background: var(--panel-2);
-    border-bottom-left-radius: 14px;
-    border-bottom-right-radius: 14px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .tour-dots {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .tour-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--line-strong);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .tour-dot.active {
-    background: var(--tape);
-    width: 22px;
-    border-radius: 4px;
-  }
-  .tour-btns {
-    display: flex;
-    gap: 8px;
-  }
-  .docs-section {
-    display: none;
-    animation: tourFade 0.25s ease;
-  }
-  .docs-section.active {
-    display: block;
   }
   .docs-table {
     width: 100%;
@@ -948,9 +908,13 @@
       </div>
     </div>
     <div class="header-actions">
-      <!-- Guide / Docs Modal Trigger -->
-      <button class="btn-icon" id="guideBtn" type="button" title="Documentation & Guided Tour" aria-label="Open Guide">
-        <span>📖 Guide</span>
+      <!-- Interactive Spotlight Tour Trigger -->
+      <button class="btn-icon" id="tourBtn" type="button" title="Interactive Walkthrough" aria-label="Start Tour">
+        <span>✨ Quick Tour</span>
+      </button>
+      <!-- Docs Modal Trigger -->
+      <button class="btn-icon" id="docsBtn" type="button" title="Documentation & FAQs" aria-label="Open Docs">
+        <span>📖 Docs</span>
       </button>
       <!-- Theme Switcher -->
       <button class="btn-icon" id="themeToggle" type="button" title="Toggle Light / Dark Mode" aria-label="Toggle Theme">
@@ -1057,13 +1021,13 @@
 
   <!-- Recorder panel -->
   <div class="panel" id="recorderPanel">
-    <div class="field">
+    <div class="field" id="fieldTargetUrl">
       <label class="label" for="siteUrl">Target Website URL</label>
       <input type="text" id="siteUrl" placeholder="https://example.com" autocomplete="off" />
     </div>
 
     <!-- Hero / Top Hold Delay & Autoplay Tuning -->
-    <div class="field">
+    <div class="field" id="fieldHeroHold">
       <div class="hero-wait-box">
         <label class="label" style="color:var(--tape);">
           <span>1. Hero Hold Duration In Video</span>
@@ -1120,7 +1084,7 @@
       </div>
     </div>
 
-    <div class="field">
+    <div class="field" id="fieldViewport">
       <label class="label">Viewport</label>
       <div class="chips" id="viewportChips">
         <span class="chip active" data-w="1440" data-h="900">Desktop 1440×900</span>
@@ -1264,195 +1228,86 @@
 
 </div>
 
-<!-- Guided Onboarding Tour & Documentation Modal -->
-<div class="modal-backdrop" id="onboardingModal" role="dialog" aria-modal="true">
+<!-- Interactive Spotlight Onboarding Elements -->
+<div id="spotlightOverlay">
+  <div id="spotlightHole"></div>
+  <div id="spotlightTooltip">
+    <span class="sp-badge" id="spBadge">Stage 1 of 5</span>
+    <h4 class="sp-title" id="spTitle">API Setup</h4>
+    <p class="sp-text" id="spText">Choose your rendering engine (ScreenshotOne, ScreenshotCore, Microlink, or Custom) and save your private keys.</p>
+    <div class="sp-footer">
+      <button class="sp-skip" id="spSkipBtn">Skip tour</button>
+      <div class="sp-nav-btns">
+        <button class="sp-btn" id="spPrevBtn" style="display:none;">Back</button>
+        <button class="sp-btn primary" id="spNextBtn">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Documentation Modal -->
+<div class="modal-backdrop" id="docsModal" role="dialog" aria-modal="true">
   <div class="modal-card">
     <div class="modal-header">
       <h3 class="modal-title">
-        <span>🎬</span> Web-Record tool Guide
+        <span>📚</span> Web-Record tool Docs & FAQs
       </h3>
-      <button class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">✕</button>
-    </div>
-
-    <div class="modal-tabs">
-      <button class="modal-tab-btn active" id="tabTourBtn">⚡ Guided Tour</button>
-      <button class="modal-tab-btn" id="tabDocsBtn">📚 Full Documentation</button>
+      <button class="modal-close-btn" id="closeDocsBtn" aria-label="Close docs">✕</button>
     </div>
 
     <div class="modal-body">
+      <h4 style="font-family:var(--mono); color:var(--tape); margin:0 0 6px; font-size:13px;">API Engine Comparison</h4>
+      <table class="docs-table">
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Best For</th>
+            <th>Hero Hold Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ScreenshotOne</strong></td>
+            <td>Studio quality & true hero pause</td>
+            <td>Native (<code>scroll_start_delay</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>ScreenshotCore</strong></td>
+            <td>High-throughput scroller</td>
+            <td>Delay buffer + native scroll</td>
+          </tr>
+          <tr>
+            <td><strong>Microlink</strong></td>
+            <td>Free public testing without keys</td>
+            <td><code>waitForTimeout</code></td>
+          </tr>
+          <tr>
+            <td><strong>Urlbox</strong></td>
+            <td>Enterprise signed rendering</td>
+            <td>Delay + viewport controls</td>
+          </tr>
+          <tr>
+            <td><strong>Custom</strong></td>
+            <td>Self-hosted Playwright/Node</td>
+            <td>Configurable template placeholders</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="font-family:var(--mono); color:var(--tape); margin:18px 0 6px; font-size:13px;">Frequently Asked Questions</h4>
       
-      <!-- TOUR STEPS -->
-      <div id="tourContainer">
-        <!-- Step 1: Engine Provider -->
-        <div class="tour-step active" data-step="1">
-          <span class="tour-badge">Step 1 of 4 · Engine Setup</span>
-          <h3 class="tour-title">Pick Your Capture Engine</h3>
-          <p class="tour-desc">Web-Record tool connects with leading screenshot & headless browser rendering APIs to produce studio-grade website videos.</p>
-          
-          <div class="tour-card-grid">
-            <div class="tour-mini-card">
-              <h4>⭐ ScreenshotOne (Recommended)</h4>
-              <p>Native in-video hero hold timing, smooth Chromium DevTools scrolling, and signed requests.</p>
-            </div>
-            <div class="tour-mini-card">
-              <h4>🚀 ScreenshotCore</h4>
-              <p>High-volume video scroller with pre-capture warmup buffering.</p>
-            </div>
-            <div class="tour-mini-card">
-              <h4>⚡ Microlink</h4>
-              <p>Instant video capture with free public tier—no keys required to start.</p>
-            </div>
-            <div class="tour-mini-card">
-              <h4>🛠️ Custom / Self-Hosted</h4>
-              <p>Plug in your own Playwright, Puppeteer, or Browserless URL templates.</p>
-            </div>
-          </div>
+      <p class="docs-faq-q">Q: Why was my background video not playing?</p>
+      <p class="docs-faq-a">Headless browsers pause HTML5 video autoplay unless explicitly unmuted and triggered. Keep "Force Autoplay & Wakeup HTML5 Videos" checked to automatically start all video elements.</p>
 
-          <div class="tour-tip-box">
-            <strong>🔒 Private & Secure:</strong> All API keys are saved exclusively in your browser's local storage. They never touch any third-party intermediary servers.
-          </div>
-        </div>
+      <p class="docs-faq-q">Q: What is the difference between Hero Hold and Pre-Record Buffer?</p>
+      <p class="docs-faq-a"><strong>Pre-Record Buffer:</strong> Happens before video capture begins to let web fonts, assets, and 3D scenes load.<br><strong>Hero Hold:</strong> Is captured inside the video so the viewer sees the hero video play before the camera scrolls down.</p>
 
-        <!-- Step 2: Hero Hold & Video Autoplay -->
-        <div class="tour-step" data-step="2">
-          <span class="tour-badge">Step 2 of 4 · Hero Timing</span>
-          <h3 class="tour-title">Prevent Cut-Off Hero Animations</h3>
-          <p class="tour-desc">Standard screen recorders start scrolling immediately at second 0, ruining hero video reels and headlines. Web-Record tool introduces precision in-video hold.</p>
-          
-          <div class="tour-card-grid">
-            <div class="tour-mini-card">
-              <h4>⏱️ In-Video Hero Hold</h4>
-              <p>Freezes the camera at the top (e.g. 3s) inside the recording while HTML5 videos and typography play.</p>
-            </div>
-            <div class="tour-mini-card">
-              <h4>🎬 Video Autoplay Override</h4>
-              <p>Automatically un-mutes and loops background video tags that headless browsers suppress.</p>
-            </div>
-          </div>
-
-          <div class="tour-tip-box">
-            <strong>💡 Pro Tip:</strong> Set Hero Hold to <strong>3s</strong> and Pre-Record Buffer to <strong>2s</strong> for smooth rendering on heavy landing pages (Webflow, Framer, Next.js).
-          </div>
-        </div>
-
-        <!-- Step 3: Viewports & Motion Tuning -->
-        <div class="tour-step" data-step="3">
-          <span class="tour-badge">Step 3 of 4 · Device & Output</span>
-          <h3 class="tour-title">Choose Viewports, Formats & Physics</h3>
-          <p class="tour-desc">Customize resolution for Desktop, Tablet, or Mobile showcases, and fine-tune your scroll distance and animation easing.</p>
-          
-          <div class="tour-card-grid">
-            <div class="tour-mini-card">
-              <h4>📱 Viewport Presets</h4>
-              <p>Desktop (1440×900), iPad/Tablet (768×1024), iPhone (390×844), or custom pixel sizing.</p>
-            </div>
-            <div class="tour-mini-card">
-              <h4>🎞️ Multi-Format Output</h4>
-              <p>Export directly to MP4 (socials/demos), WebM (web), GIF (email/Slack), or MOV.</p>
-            </div>
-          </div>
-
-          <div class="tour-tip-box">
-            <strong>📊 Visual Timeline:</strong> The live playback timeline bar updates in real-time to show the exact breakdown of Hero Hold vs. Scroll duration.
-          </div>
-        </div>
-
-        <!-- Step 4: Record & Export -->
-        <div class="tour-step" data-step="4">
-          <span class="tour-badge">Step 4 of 4 · Capture & Export</span>
-          <h3 class="tour-title">One-Click Recording & Instant Export</h3>
-          <p class="tour-desc">Hit ● Record Video to start capturing. Once rendered, you can preview it in the retro viewfinder, download it directly, or copy the direct link.</p>
-          
-          <div class="tour-card-grid">
-            <div class="tour-mini-card">
-              <h4>📼 Retro Viewfinder</h4>
-              <p>Live progress tape with blinking REC indicator and frame-by-frame player.</p>
-            </div>
-            <div class="tour-mini-card">
-              <h4>🎞️ Filmstrip History</h4>
-              <p>Revisit and re-download your previous video recordings directly from the filmstrip.</p>
-            </div>
-          </div>
-
-          <div class="tour-tip-box">
-            <strong>🎉 Ready to start:</strong> Paste any website URL and hit record to capture your first video!
-          </div>
-        </div>
-      </div>
-
-      <!-- FULL DOCUMENTATION -->
-      <div id="docsContainer" class="docs-section">
-        <h3 class="tour-title" style="margin-bottom:6px;">Web-Record tool Documentation</h3>
-        <p class="tour-desc">Complete reference guide for providers, parameters, and optimal recording settings.</p>
-
-        <h4 style="font-family:var(--mono); color:var(--tape); margin:18px 0 6px; font-size:13px;">API Providers Comparison</h4>
-        <table class="docs-table">
-          <thead>
-            <tr>
-              <th>Provider</th>
-              <th>Best For</th>
-              <th>Hero Hold Support</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>ScreenshotOne</strong></td>
-              <td>Studio quality & true hero pause</td>
-              <td>Native (<code>scroll_start_delay</code>)</td>
-            </tr>
-            <tr>
-              <td><strong>ScreenshotCore</strong></td>
-              <td>High-throughput scroller</td>
-              <td>Delay buffer + native scroll</td>
-            </tr>
-            <tr>
-              <td><strong>Microlink</strong></td>
-              <td>Free public testing without keys</td>
-              <td><code>waitForTimeout</code></td>
-            </tr>
-            <tr>
-              <td><strong>Urlbox</strong></td>
-              <td>Enterprise signed rendering</td>
-              <td>Delay + viewport controls</td>
-            </tr>
-            <tr>
-              <td><strong>Custom</strong></td>
-              <td>Self-hosted Playwright/Node</td>
-              <td>Configurable template placeholders</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h4 style="font-family:var(--mono); color:var(--tape); margin:18px 0 6px; font-size:13px;">Frequently Asked Questions</h4>
-        
-        <p class="docs-faq-q">Q: Why was my background video not playing?</p>
-        <p class="docs-faq-a">Headless browsers pause HTML5 video autoplay unless explicitly unmuted and triggered. Keep "Force Autoplay & Wakeup HTML5 Videos" checked to automatically start all video elements.</p>
-
-        <p class="docs-faq-q">Q: What is the difference between Hero Hold and Pre-Record Buffer?</p>
-        <p class="docs-faq-a"><strong>Pre-Record Buffer:</strong> Happens before video capture begins to let web fonts, assets, and 3D scenes load.<br><strong>Hero Hold:</strong> Is captured inside the video so the viewer sees the hero video play before the camera scrolls down.</p>
-
-        <p class="docs-faq-q">Q: Where can I get API keys?</p>
-        <p class="docs-faq-a">
-          • <a href="https://dash.screenshotone.com/access" target="_blank" rel="noopener" style="color:var(--tape);">ScreenshotOne Dashboard</a> (100 free/month)<br>
-          • <a href="https://screenshotcore.com" target="_blank" rel="noopener" style="color:var(--tape);">ScreenshotCore Dashboard</a><br>
-          • <a href="https://microlink.io" target="_blank" rel="noopener" style="color:var(--tape);">Microlink.io</a> (Free tier requires no key)
-        </p>
-      </div>
-
-    </div>
-
-    <!-- Tour Navigation Footer -->
-    <div class="tour-footer" id="tourFooter">
-      <div class="tour-dots" id="tourDots">
-        <span class="tour-dot active" data-step="1"></span>
-        <span class="tour-dot" data-step="2"></span>
-        <span class="tour-dot" data-step="3"></span>
-        <span class="tour-dot" data-step="4"></span>
-      </div>
-      <div class="tour-btns">
-        <button class="btn" id="prevStepBtn" style="display:none;">Back</button>
-        <button class="btn primary" id="nextStepBtn">Next Step →</button>
-      </div>
+      <p class="docs-faq-q">Q: Where can I get API keys?</p>
+      <p class="docs-faq-a">
+        • <a href="https://dash.screenshotone.com/access" target="_blank" rel="noopener" style="color:var(--tape);">ScreenshotOne Dashboard</a> (100 free/month)<br>
+        • <a href="https://screenshotcore.com" target="_blank" rel="noopener" style="color:var(--tape);">ScreenshotCore Dashboard</a><br>
+        • <a href="https://microlink.io" target="_blank" rel="noopener" style="color:var(--tape);">Microlink.io</a> (Free tier requires no key)
+      </p>
     </div>
   </div>
 </div>
@@ -1565,100 +1420,143 @@
     setTheme(current === 'light' ? 'dark' : 'light');
   });
 
-  // ---------- Onboarding Tour & Docs Modal Logic ----------
-  const modal = $('onboardingModal');
-  const guideBtn = $('guideBtn');
-  const closeModalBtn = $('closeModalBtn');
-  const tabTourBtn = $('tabTourBtn');
-  const tabDocsBtn = $('tabDocsBtn');
-  const tourContainer = $('tourContainer');
-  const docsContainer = $('docsContainer');
-  const tourFooter = $('tourFooter');
-  const prevStepBtn = $('prevStepBtn');
-  const nextStepBtn = $('nextStepBtn');
-  const tourDots = document.querySelectorAll('#tourDots .tour-dot');
-  const tourSteps = document.querySelectorAll('.tour-step');
-  let currentStep = 1;
-  const totalSteps = 4;
+  // ---------- Docs Modal Logic ----------
+  const docsModal = $('docsModal');
+  const docsBtn = $('docsBtn');
+  const closeDocsBtn = $('closeDocsBtn');
 
-  function openGuide(tab = 'tour', step = 1){
-    modal.classList.add('open');
-    switchTab(tab);
-    if (tab === 'tour') goToStep(step);
-  }
+  function openDocs(){ docsModal.classList.add('open'); }
+  function closeDocs(){ docsModal.classList.remove('open'); }
+  docsBtn.addEventListener('click', openDocs);
+  closeDocsBtn.addEventListener('click', closeDocs);
+  docsModal.addEventListener('click', (e) => { if (e.target === docsModal) closeDocs(); });
 
-  function closeGuide(){
-    modal.classList.remove('open');
-    localStorage.setItem('rec_tour_seen', 'true');
-  }
+  // ---------- Live Interactive Spotlight Tour ----------
+  const tourBtn = $('tourBtn');
+  const spotlightOverlay = $('spotlightOverlay');
+  const spotlightHole = $('spotlightHole');
+  const spotlightTooltip = $('spotlightTooltip');
+  const spBadge = $('spBadge');
+  const spTitle = $('spTitle');
+  const spText = $('spText');
+  const spPrevBtn = $('spPrevBtn');
+  const spNextBtn = $('spNextBtn');
+  const spSkipBtn = $('spSkipBtn');
 
-  function switchTab(tab){
-    if (tab === 'tour') {
-      tabTourBtn.classList.add('active');
-      tabDocsBtn.classList.remove('active');
-      tourContainer.style.display = 'block';
-      docsContainer.style.display = 'none';
-      tourFooter.style.display = 'flex';
-    } else {
-      tabDocsBtn.classList.add('active');
-      tabTourBtn.classList.remove('active');
-      tourContainer.style.display = 'none';
-      docsContainer.style.display = 'block';
-      tourFooter.style.display = 'none';
+  let tourIndex = 0;
+  const tourStages = [
+    {
+      target: () => $('connPill'),
+      badge: 'Stage 1 of 5 · API Engine',
+      title: 'Choose Provider & Keys',
+      text: 'Click here anytime to switch between ScreenshotOne, ScreenshotCore, Microlink, or Custom endpoints.'
+    },
+    {
+      target: () => $('fieldTargetUrl'),
+      badge: 'Stage 2 of 5 · Target URL',
+      title: 'Enter Website Address',
+      text: 'Type or paste the full website URL you wish to capture into a video or GIF.'
+    },
+    {
+      target: () => $('fieldHeroHold'),
+      badge: 'Stage 3 of 5 · Hero Hold & Autoplay',
+      title: 'Hero Video Reel Pause',
+      text: 'Set how many seconds the camera stays still at the top so hero videos and animations play on screen before scrolling.'
+    },
+    {
+      target: () => $('fieldViewport'),
+      badge: 'Stage 4 of 5 · Device & Motion',
+      title: 'Viewport & Format Tuning',
+      text: 'Switch between Desktop, Tablet, or Mobile aspect ratios, and choose MP4, WebM, or GIF export.'
+    },
+    {
+      target: () => $('recordBar'),
+      badge: 'Stage 5 of 5 · Viewfinder & Export',
+      title: 'Hit Record & Download',
+      text: 'Watch the rendering in the retro viewfinder, preview the live capture, and download directly!'
     }
-  }
+  ];
 
-  function goToStep(step){
-    currentStep = step;
-    tourSteps.forEach(s => {
-      s.classList.toggle('active', parseInt(s.dataset.step, 10) === currentStep);
-    });
-    tourDots.forEach(d => {
-      d.classList.toggle('active', parseInt(d.dataset.step, 10) === currentStep);
-    });
+  function positionSpotlight(index){
+    tourIndex = index;
+    const stage = tourStages[index];
+    const targetEl = stage.target();
+    if (!targetEl) return;
 
-    prevStepBtn.style.display = currentStep > 1 ? 'inline-block' : 'none';
-    if (currentStep === totalSteps) {
-      nextStepBtn.textContent = '🚀 Start Recording';
-    } else {
-      nextStepBtn.textContent = 'Next Step →';
-    }
-  }
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  guideBtn.addEventListener('click', () => openGuide('tour', 1));
-  closeModalBtn.addEventListener('click', closeGuide);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeGuide();
-  });
-
-  tabTourBtn.addEventListener('click', () => switchTab('tour'));
-  tabDocsBtn.addEventListener('click', () => switchTab('docs'));
-
-  nextStepBtn.addEventListener('click', () => {
-    if (currentStep < totalSteps) {
-      goToStep(currentStep + 1);
-    } else {
-      closeGuide();
-    }
-  });
-
-  prevStepBtn.addEventListener('click', () => {
-    if (currentStep > 1) {
-      goToStep(currentStep - 1);
-    }
-  });
-
-  tourDots.forEach(dot => {
-    dot.addEventListener('click', () => {
-      goToStep(parseInt(dot.dataset.step, 10));
-    });
-  });
-
-  // Check if first-time visitor
-  if (!localStorage.getItem('rec_tour_seen')) {
     setTimeout(() => {
-      openGuide('tour', 1);
-    }, 600);
+      const rect = targetEl.getBoundingClientRect();
+      const pad = 8;
+      const top = Math.max(0, rect.top - pad);
+      const left = Math.max(0, rect.left - pad);
+      const width = rect.width + (pad * 2);
+      const height = rect.height + (pad * 2);
+
+      spotlightHole.style.top = top + 'px';
+      spotlightHole.style.left = left + 'px';
+      spotlightHole.style.width = width + 'px';
+      spotlightHole.style.height = height + 'px';
+
+      spBadge.textContent = stage.badge;
+      spTitle.textContent = stage.title;
+      spText.textContent = stage.text;
+
+      spPrevBtn.style.display = tourIndex > 0 ? 'inline-block' : 'none';
+      spNextBtn.textContent = tourIndex === tourStages.length - 1 ? 'Finish 🎉' : 'Next →';
+
+      // Tooltip position
+      let ttTop = top + height + 12;
+      let ttLeft = left + (width / 2) - 160;
+
+      if (ttLeft < 16) ttLeft = 16;
+      if (ttLeft + 320 > window.innerWidth) ttLeft = window.innerWidth - 336;
+
+      if (ttTop + 160 > window.innerHeight) {
+        ttTop = Math.max(16, top - 160);
+      }
+
+      spotlightTooltip.style.top = ttTop + 'px';
+      spotlightTooltip.style.left = ttLeft + 'px';
+    }, 200);
+  }
+
+  function startSpotlightTour(){
+    spotlightOverlay.classList.add('active');
+    positionSpotlight(0);
+  }
+
+  function stopSpotlightTour(){
+    spotlightOverlay.classList.remove('active');
+    localStorage.setItem('rec_spotlight_seen', 'true');
+  }
+
+  tourBtn.addEventListener('click', startSpotlightTour);
+  spSkipBtn.addEventListener('click', stopSpotlightTour);
+
+  spNextBtn.addEventListener('click', () => {
+    if (tourIndex < tourStages.length - 1) {
+      positionSpotlight(tourIndex + 1);
+    } else {
+      stopSpotlightTour();
+    }
+  });
+
+  spPrevBtn.addEventListener('click', () => {
+    if (tourIndex > 0) {
+      positionSpotlight(tourIndex - 1);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (spotlightOverlay.classList.contains('active')) {
+      positionSpotlight(tourIndex);
+    }
+  });
+
+  // Auto-trigger spotlight on first visit
+  if (!localStorage.getItem('rec_spotlight_seen')) {
+    setTimeout(startSpotlightTour, 800);
   }
 
   // ---------- Application State & Core ----------
