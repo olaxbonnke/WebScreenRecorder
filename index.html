@@ -677,17 +677,30 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18), 0 0 20px rgba(217, 164, 65, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
-  .sp-badge {
+  .sp-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .sp-tour-label {
     font-family: var(--mono);
     font-size: 11px;
+    font-weight: 700;
+    color: var(--tape);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .sp-badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
     font-weight: 600;
     color: var(--tape);
     background: rgba(217,164,65,0.18);
     border: 1px solid var(--tape-dim);
-    padding: 3px 9px;
+    padding: 2.5px 8px;
     border-radius: 4px;
     display: inline-block;
-    margin-bottom: 8px;
     letter-spacing: 0.04em;
   }
   .sp-title {
@@ -1396,6 +1409,9 @@
     <defs>
       <mask id="spotlightMask">
         <rect width="100%" height="100%" fill="white" />
+        <!-- Always-Visible Header Brand (Logo, App Name, Tagline) Cutout -->
+        <rect id="spotlightMaskBrand" x="0" y="0" width="0" height="0" rx="10" ry="10" fill="black" />
+        <!-- Active Stage Target Cutout -->
         <rect id="spotlightMaskHole" x="0" y="0" width="0" height="0" rx="12" ry="12" fill="black" />
       </mask>
     </defs>
@@ -1403,7 +1419,10 @@
   <div id="spotlightBlurLayer"></div>
   <div id="spotlightHole"></div>
   <div id="spotlightTooltip">
-    <span class="sp-badge" id="spBadge">Stage 1 of 5</span>
+    <div class="sp-header-row">
+      <div class="sp-tour-label">✨ Web-Record Tour</div>
+      <span class="sp-badge" id="spBadge">Stage 1 of 5</span>
+    </div>
     <h4 class="sp-title" id="spTitle">API Setup</h4>
     <p class="sp-text" id="spText">Choose your rendering engine (ScreenshotOne, ScreenshotCore, Microlink, or Custom) and save your private keys.</p>
     <div class="sp-footer">
@@ -1617,10 +1636,14 @@
   let tourIndex = 0;
   const tourStages = [
     {
-      target: () => $('connPill'),
-      badge: 'Stage 1 of 5 · API Engine',
-      title: 'Choose Provider & Keys',
-      text: 'Click here anytime to switch between ScreenshotOne, ScreenshotCore, Microlink, or Custom endpoints.'
+      target: () => {
+        const sp = $('setupPanel');
+        if (sp) sp.style.display = 'block';
+        return sp || $('connPill');
+      },
+      badge: 'Stage 1 of 5 · API Engine & Keys',
+      title: 'Select Provider & Insert API Keys',
+      text: 'Select your rendering engine (ScreenshotOne, ScreenshotCore, Microlink, Urlbox, or Custom) and insert your respective API key.'
     },
     {
       target: () => $('fieldTargetUrl'),
@@ -1654,6 +1677,18 @@
     if (!stage) return;
     const targetEl = stage.target();
     if (!targetEl) return;
+
+    // Keep header brand (Logo, App Name, Tagline) unblurred and clearly visible
+    const brandEl = document.querySelector('.brand');
+    const maskBrand = $('spotlightMaskBrand');
+    if (brandEl && maskBrand) {
+      const bRect = brandEl.getBoundingClientRect();
+      const bPad = 6;
+      maskBrand.setAttribute('x', Math.max(0, bRect.left - bPad));
+      maskBrand.setAttribute('y', Math.max(0, bRect.top - bPad));
+      maskBrand.setAttribute('width', bRect.width + (bPad * 2));
+      maskBrand.setAttribute('height', bRect.height + (bPad * 2));
+    }
 
     const rect = targetEl.getBoundingClientRect();
     const pad = 10;
