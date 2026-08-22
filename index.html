@@ -1699,17 +1699,17 @@
     const targetEl = stage.target();
     if (!targetEl) return;
 
-    // Show straight transparent header bar ONLY during Stage 1
+    // Show straight transparent header bar ONLY during Stage 1 (reduced height to right below the logo)
     const maskHeader = $('spotlightMaskHeader');
     if (maskHeader) {
       if (tourIndex === 0) {
-        const headerEl = $('appHeader') || document.querySelector('header');
-        if (headerEl) {
-          const hRect = headerEl.getBoundingClientRect();
+        const logoEl = document.querySelector('.logo-svg') || document.querySelector('.brand');
+        if (logoEl) {
+          const lRect = logoEl.getBoundingClientRect();
           maskHeader.setAttribute('x', '0');
           maskHeader.setAttribute('y', '0');
           maskHeader.setAttribute('width', '100%');
-          maskHeader.setAttribute('height', Math.max(0, hRect.bottom + 4));
+          maskHeader.setAttribute('height', Math.max(0, Math.round(lRect.bottom + 8)));
         }
       } else {
         maskHeader.setAttribute('width', '0');
