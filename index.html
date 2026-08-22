@@ -630,9 +630,9 @@
   #spotlightBlurLayer {
     position: fixed;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.35)), rgba(15, 17, 23, 0.68);
-    backdrop-filter: blur(16px) saturate(180%) contrast(95%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%) contrast(95%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.25)), rgba(12, 14, 18, 0.48);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
     mask: url(#spotlightMask);
     -webkit-mask: url(#spotlightMask);
     z-index: 201;
@@ -640,28 +640,28 @@
   }
 
   [data-theme="light"] #spotlightBlurLayer {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(240, 240, 245, 0.4)), rgba(240, 242, 248, 0.58);
-    backdrop-filter: blur(16px) saturate(180%) contrast(95%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%) contrast(95%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(240, 240, 245, 0.3)), rgba(240, 242, 248, 0.45);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
   }
 
   #spotlightHole {
     position: fixed;
     border: 2.5px solid var(--tape);
     border-radius: 12px;
-    box-shadow: 0 0 24px rgba(217, 164, 65, 0.55);
+    box-shadow: 0 0 20px rgba(217, 164, 65, 0.5);
     pointer-events: none;
     z-index: 202;
-    transition: width 0.15s ease, height 0.15s ease;
+    transition: none;
   }
 
   #spotlightTooltip {
     position: fixed;
     width: 380px;
     max-width: calc(100vw - 32px);
-    background: rgba(22, 24, 31, 0.85);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(22, 24, 31, 0.88);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
     border: 1px solid rgba(217, 164, 65, 0.6);
     border-radius: 14px;
     padding: 20px 22px;
@@ -672,7 +672,7 @@
   }
 
   [data-theme="light"] #spotlightTooltip {
-    background: rgba(255, 255, 255, 0.88);
+    background: rgba(255, 255, 255, 0.92);
     border-color: rgba(184, 134, 11, 0.55);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18), 0 0 20px rgba(217, 164, 65, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
@@ -1582,6 +1582,14 @@
     spotlightTooltip.style.left = ttLeft + 'px';
   }
 
+  let tourRafId = null;
+  function runTourTrackingLoop(){
+    if (spotlightOverlay.classList.contains('active')) {
+      syncSpotlightRect();
+      tourRafId = requestAnimationFrame(runTourTrackingLoop);
+    }
+  }
+
   function positionSpotlight(index){
     tourIndex = index;
     const stage = tourStages[index];
@@ -1595,27 +1603,24 @@
     spNextBtn.textContent = tourIndex === tourStages.length - 1 ? 'Finish 🎉' : 'Next →';
 
     targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // Smoothly track element throughout smooth scroll animation
-    const startTime = performance.now();
-    function trackDuringScroll(now){
-      syncSpotlightRect();
-      if (now - startTime < 850 && spotlightOverlay.classList.contains('active')) {
-        requestAnimationFrame(trackDuringScroll);
-      }
-    }
-    requestAnimationFrame(trackDuringScroll);
+    syncSpotlightRect();
   }
 
   function startSpotlightTour(){
     spotlightOverlay.classList.add('active');
     window.addEventListener('scroll', syncSpotlightRect, { passive: true });
     window.addEventListener('resize', syncSpotlightRect);
+    if (tourRafId) cancelAnimationFrame(tourRafId);
+    tourRafId = requestAnimationFrame(runTourTrackingLoop);
     positionSpotlight(0);
   }
 
   function stopSpotlightTour(){
     spotlightOverlay.classList.remove('active');
+    if (tourRafId) {
+      cancelAnimationFrame(tourRafId);
+      tourRafId = null;
+    }
     window.removeEventListener('scroll', syncSpotlightRect);
     window.removeEventListener('resize', syncSpotlightRect);
     window.scrollTo({ top: 0, behavior: 'smooth' });
