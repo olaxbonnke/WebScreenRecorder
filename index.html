@@ -1433,6 +1433,8 @@
     <defs>
       <mask id="spotlightMask">
         <rect width="100%" height="100%" fill="white" />
+        <!-- Stage 1 only straight transparent header bar -->
+        <rect id="spotlightMaskHeader" x="0" y="0" width="0" height="0" fill="black" />
         <!-- Single Active Stage Target Cutout -->
         <rect id="spotlightMaskHole" x="0" y="0" width="0" height="0" rx="12" ry="12" fill="black" />
       </mask>
@@ -1655,10 +1657,14 @@
   let tourIndex = 0;
   const tourStages = [
     {
-      target: () => $('appHeader') || document.querySelector('header'),
-      badge: 'Stage 1 of 5 · Control Header & Setup',
-      title: 'Web-Record Tool & API Setup',
-      text: 'This is the control header. Use the API Setup button to select your rendering provider (ScreenshotOne, ScreenshotCore, Microlink, Urlbox, or Custom) and save your keys.'
+      target: () => {
+        const sp = $('setupPanel');
+        if (sp) sp.style.display = 'block';
+        return sp || $('connPill');
+      },
+      badge: 'Stage 1 of 5 · API Engine & Keys',
+      title: 'Select Provider & Insert API Keys',
+      text: 'Select your rendering engine (ScreenshotOne, ScreenshotCore, Microlink, Urlbox, or Custom) and insert your respective API key.'
     },
     {
       target: () => $('fieldTargetUrl'),
@@ -1692,6 +1698,24 @@
     if (!stage) return;
     const targetEl = stage.target();
     if (!targetEl) return;
+
+    // Show straight transparent header bar ONLY during Stage 1
+    const maskHeader = $('spotlightMaskHeader');
+    if (maskHeader) {
+      if (tourIndex === 0) {
+        const headerEl = $('appHeader') || document.querySelector('header');
+        if (headerEl) {
+          const hRect = headerEl.getBoundingClientRect();
+          maskHeader.setAttribute('x', '0');
+          maskHeader.setAttribute('y', '0');
+          maskHeader.setAttribute('width', '100%');
+          maskHeader.setAttribute('height', Math.max(0, hRect.bottom + 4));
+        }
+      } else {
+        maskHeader.setAttribute('width', '0');
+        maskHeader.setAttribute('height', '0');
+      }
+    }
 
     const rect = targetEl.getBoundingClientRect();
     const pad = 10;
