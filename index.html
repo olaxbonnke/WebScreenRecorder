@@ -1240,7 +1240,7 @@
       <div class="field">
         <label class="label" for="customEndpoint">Video Endpoint URL Template</label>
         <input type="text" id="customEndpoint" placeholder="https://api.screenshotone.com/animate?url={{url}}&access_key={{key}}&format={{format}}&duration={{duration}}&scenario=scroll&scroll_start_delay={{hero_hold_ms}}&delay={{preload_delay_s}}" />
-        <p class="hint">Placeholders: <code>{{url}}</code>, <code>{{key}}</code>, <code>{{hero_hold_s}}</code>, <code>{{hero_hold_ms}}</code>, <code>{{preload_delay_s}}</code>, <code>{{preload_delay_ms}}</code>, <code>{{duration}}</code>, <code>{{width}}</code>, <code>{{height}}</code>, <code>{{format}}</code>, <code>{{scroll}}</code>.</p>
+        <p class="hint">Placeholders: <code>{{url}}</code>, <code>{{key}}</code>, <code>{{hero_hold_s}}</code>, <code>{{hero_hold_ms}}</code>, <code>{{preload_delay_s}}</code>, <code>{{preload_delay_ms}}</code>, <code>{{duration}}</code>, <code>{{width}}</code>, <code>{{height}}</code>, <code>{{format}}</code>, <code>{{scroll}}</code>, <code>{{color_scheme}}</code>, <code>{{dark_mode}}</code>.</p>
       </div>
       <div class="field">
         <label class="label" for="customApiKey">API Key / Token (Optional)</label>
@@ -1260,6 +1260,23 @@
     <div class="field" id="fieldTargetUrl">
       <label class="label" for="siteUrl">Target Website URL</label>
       <input type="text" id="siteUrl" placeholder="https://example.com" autocomplete="off" />
+    </div>
+
+    <!-- Site Color Scheme & Theme Toggle Detection -->
+    <div class="field" id="fieldColorScheme">
+      <label class="label">
+        <span>Captured Page Mode (Light / Dark)</span>
+        <span class="badge-tag" id="colorSchemeBadge">Original Site Theme</span>
+      </label>
+      <p class="hint" style="margin-top:0; margin-bottom:10px;">Select whether the recorded webpage should appear in light or dark mode. The tool automatically detects and clicks the webpage's theme toggle button, switches framework themes (e.g. Tailwind, Next.js, Docusaurus), and sets the system color scheme before recording starts.</p>
+      <div class="chips" id="colorSchemeChips">
+        <span class="chip active" data-scheme="system">⚙ Original / System</span>
+        <span class="chip" data-scheme="light">☀ Light Mode</span>
+        <span class="chip" data-scheme="dark">🌙 Dark Mode</span>
+      </div>
+      <div style="margin-top: 8px;">
+        <input type="text" id="customThemeSelector" placeholder="Custom theme toggle selector (optional, e.g. #theme-toggle or button[aria-label*='theme'])" style="font-size:12px; padding: 7px 10px;" autocomplete="off" />
+      </div>
     </div>
 
     <!-- Hero / Top Hold Delay & Autoplay Tuning -->
@@ -1550,6 +1567,9 @@
       <p class="docs-faq-q">Q: Why was my background video not playing?</p>
       <p class="docs-faq-a">Headless browsers pause HTML5 video autoplay unless explicitly unmuted and triggered. Keep "Force Autoplay & Wakeup HTML5 Videos" checked to automatically start all video elements.</p>
 
+      <p class="docs-faq-q">Q: How does the Light / Dark mode toggle detection work?</p>
+      <p class="docs-faq-a">When you select <strong>☀ Light Mode</strong> or <strong>🌙 Dark Mode</strong>, the recorder automatically scans the target website for theme toggle buttons, clicks the toggle to activate your desired theme, sets CSS classes (like <code>.dark</code> / <code>.light</code>) and attributes (<code>data-theme</code>), and overrides <code>color-scheme</code> media queries before recording starts. You can also specify a custom CSS selector if the website uses an unusual toggle button.</p>
+
       <p class="docs-faq-q">Q: What is the difference between Hero Hold and Pre-Record Buffer?</p>
       <p class="docs-faq-a"><strong>Pre-Record Buffer:</strong> Happens before video capture begins to let web fonts, assets, and 3D scenes load.<br><strong>Hero Hold:</strong> Is captured inside the video so the viewer sees the hero video play before the camera scrolls down.</p>
 
@@ -1708,9 +1728,9 @@
     },
     {
       target: () => $('fieldTargetUrl'),
-      badge: 'Stage 2 of 5 · Target URL',
-      title: 'Enter Website Address',
-      text: 'Type or paste the full website URL you wish to capture into a video or GIF.'
+      badge: 'Stage 2 of 5 · Target URL & Mode',
+      title: 'Enter Website Address & Theme Mode',
+      text: 'Type or paste your target website URL and choose Light or Dark mode. The recorder will automatically find and toggle the site\'s theme switcher before recording.'
     },
     {
       target: () => $('fieldHeroHold'),
@@ -1924,6 +1944,7 @@
     viewportH: 900,
     scenario: 'scroll',
     format: 'mp4',
+    colorScheme: 'system',   // 'system' | 'light' | 'dark'
     history: []
   };
 
@@ -2173,6 +2194,12 @@
 
   wireChips('formatChips', (chip) => { state.format = chip.dataset.format; });
 
+  wireChips('colorSchemeChips', (chip) => {
+    state.colorScheme = chip.dataset.scheme;
+    const labels = { system: 'Original Site Theme', light: '☀ Light Mode', dark: '🌙 Dark Mode' };
+    $('colorSchemeBadge').textContent = labels[state.colorScheme] || 'Original Site Theme';
+  });
+
   $('duration').addEventListener('input', e => {
     $('durationVal').textContent = e.target.value + 's';
     updateTimeline();
@@ -2273,6 +2300,126 @@
     `.replace(/\s+/g, ' ').trim();
   }
 
+  // Script that automatically discovers and triggers the page's theme toggle,
+  // updates HTML attributes/classes, and forces prefers-color-scheme styles
+  function getThemeActivationSnippet(scheme, customSelector){
+    if (scheme === 'system' && !customSelector) return '';
+    const targetMode = scheme; // 'light', 'dark', or 'system'
+    const cleanCustom = (customSelector || '').replace(/"/g, '\\"');
+
+    return `
+      (function(){
+        try {
+          var targetMode = '${targetMode}';
+          var customSel = '${cleanCustom}';
+
+          function executeThemeSwitch() {
+            var html = document.documentElement;
+            var body = document.body;
+
+            // 1. Try custom selector if specified by user
+            if (customSel) {
+              try {
+                var customEl = document.querySelector(customSel);
+                if (customEl) {
+                  customEl.click();
+                  return;
+                }
+              } catch(e){}
+            }
+
+            if (targetMode === 'system') return;
+
+            // Determine if the page is currently in dark mode
+            function isCurrentlyDark() {
+              if (html.classList.contains('dark') || (body && body.classList.contains('dark'))) return true;
+              var dAttr = (html.getAttribute('data-theme') || (body && body.getAttribute('data-theme')) || '').toLowerCase();
+              if (dAttr.includes('dark')) return true;
+              var mAttr = (html.getAttribute('data-mode') || (body && body.getAttribute('data-mode')) || '').toLowerCase();
+              if (mAttr.includes('dark')) return true;
+              var colAttr = (html.getAttribute('data-color-mode') || '').toLowerCase();
+              if (colAttr.includes('dark')) return true;
+              return false;
+            }
+
+            var currentlyDark = isCurrentlyDark();
+            var needsClick = (targetMode === 'dark' && !currentlyDark) || (targetMode === 'light' && currentlyDark);
+
+            // Comprehensive selectors for theme toggles in modern web apps
+            var toggleSelectors = [
+              'button[id*="theme"]', 'button[id*="dark"]', 'button[id*="mode"]', 'button[id*="color-scheme"]',
+              'button[class*="theme"]', 'button[class*="dark-mode"]', 'button[class*="light-mode"]',
+              'button[class*="mode-toggle"]', 'button[class*="theme-toggle"]',
+              'button[aria-label*="theme" i]', 'button[aria-label*="dark" i]', 'button[aria-label*="light" i]', 'button[aria-label*="color mode" i]',
+              'button[title*="theme" i]', 'button[title*="dark" i]', 'button[title*="light" i]',
+              '[data-theme-toggle]', '[data-toggle-theme]', '[data-theme-switcher]',
+              'input[type="checkbox"][id*="theme"]', 'input[type="checkbox"][id*="dark"]',
+              '.theme-switch', '.theme-toggle', '.dark-mode-toggle'
+            ];
+
+            if (needsClick) {
+              for (var i = 0; i < toggleSelectors.length; i++) {
+                try {
+                  var btn = document.querySelector(toggleSelectors[i]);
+                  if (btn && btn.offsetParent !== null) {
+                    btn.click();
+                    break;
+                  }
+                } catch(e){}
+              }
+            }
+
+            // Framework & DOM fallbacks (Tailwind, Bootstrap, Docusaurus, Next.js, Radix)
+            if (targetMode === 'dark') {
+              html.classList.add('dark');
+              html.classList.remove('light');
+              if (body) { body.classList.add('dark'); body.classList.remove('light'); }
+              html.setAttribute('data-theme', 'dark');
+              html.setAttribute('data-mode', 'dark');
+              html.setAttribute('data-color-mode', 'dark');
+              html.setAttribute('color-scheme', 'dark');
+              try {
+                localStorage.setItem('theme', 'dark');
+                localStorage.setItem('color-theme', 'dark');
+                localStorage.setItem('darkMode', 'true');
+                localStorage.setItem('chakra-ui-color-mode', 'dark');
+                localStorage.setItem('docusaurus.theme', 'dark');
+              } catch(e){}
+            } else if (targetMode === 'light') {
+              html.classList.remove('dark');
+              html.classList.add('light');
+              if (body) { body.classList.remove('dark'); body.classList.add('light'); }
+              html.setAttribute('data-theme', 'light');
+              html.setAttribute('data-mode', 'light');
+              html.setAttribute('data-color-mode', 'light');
+              html.setAttribute('color-scheme', 'light');
+              try {
+                localStorage.setItem('theme', 'light');
+                localStorage.setItem('color-theme', 'light');
+                localStorage.setItem('darkMode', 'false');
+                localStorage.setItem('chakra-ui-color-mode', 'light');
+                localStorage.setItem('docusaurus.theme', 'light');
+              } catch(e){}
+            }
+
+            // Force prefers-color-scheme CSS variable & color-scheme overrides
+            var style = document.getElementById('__webrecord_cs_override__') || document.createElement('style');
+            style.id = '__webrecord_cs_override__';
+            style.textContent = ':root { color-scheme: ' + targetMode + ' !important; }';
+            if (!style.parentNode) (document.head || html).appendChild(style);
+          }
+
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', executeThemeSwitch);
+          } else {
+            executeThemeSwitch();
+          }
+          setTimeout(executeThemeSwitch, 400);
+        } catch(e){}
+      })();
+    `.replace(/\s+/g, ' ').trim();
+  }
+
   // ---------- Provider Request Builder ----------
   async function buildRequestUrl(){
     const site = normalizeUrl($('siteUrl').value);
@@ -2289,6 +2436,15 @@
     const scrollDurMs = parseInt($('scrollDuration').value, 10) || 2500;
     const scrollBack = $('scrollBack').checked;
 
+    const customSelector = ($('customThemeSelector') ? $('customThemeSelector').value.trim() : '');
+    const themeSnippet = getThemeActivationSnippet(state.colorScheme, customSelector);
+
+    // Combine scripts to inject
+    const combinedScripts = [
+      (forcePlay ? getVideoAutoplaySnippet() : ''),
+      themeSnippet
+    ].filter(Boolean).join('\n');
+
     // 1. ScreenshotOne (Native scroll_start_delay ensures true hero hold + native smooth scroll)
     if (state.provider === 'screenshotone') {
       const cfg = state.providers.screenshotone;
@@ -2303,6 +2459,13 @@
       params.set('viewport_width', String(state.viewportW));
       params.set('viewport_height', String(state.viewportH));
 
+      // Native ScreenshotOne dark mode parameter
+      if (state.colorScheme === 'dark') {
+        params.set('dark_mode', 'true');
+      } else if (state.colorScheme === 'light') {
+        params.set('dark_mode', 'false');
+      }
+
       if (preloadS > 0) {
         params.set('delay', String(preloadS));
       }
@@ -2316,8 +2479,8 @@
         params.set('scroll_back', scrollBack ? 'true' : 'false');
       }
 
-      if (forcePlay) {
-        params.set('scripts', getVideoAutoplaySnippet());
+      if (combinedScripts) {
+        params.set('scripts', combinedScripts);
       }
 
       params.set('block_ads', $('blockAds').checked);
@@ -2356,13 +2519,18 @@
       params.set('viewport_height', String(state.viewportH));
       if (state.viewportW <= 480) params.set('viewport_mobile', 'true');
 
+      // Native dark_mode option for ScreenshotCore
+      if (state.colorScheme === 'dark') {
+        params.set('dark_mode', 'true');
+      }
+
       const totalWait = preloadMs + heroHoldMs;
       if (totalWait > 0) {
         params.set('delay', String(totalWait));
       }
 
-      if (forcePlay) {
-        params.set('js', getVideoAutoplaySnippet());
+      if (combinedScripts) {
+        params.set('js', combinedScripts);
       }
 
       if ($('blockAds').checked) params.set('block_ads', 'true');
@@ -2392,9 +2560,14 @@
       params.set('viewport.height', String(state.viewportH));
       if (isScroll) params.set('scroll', 'true');
       
+      // Native colorScheme option for Microlink Puppeteer
+      if (state.colorScheme === 'dark' || state.colorScheme === 'light') {
+        params.set('colorScheme', state.colorScheme);
+      }
+
       const totalWait = preloadMs + heroHoldMs;
       if (totalWait > 0) params.set('waitForTimeout', String(totalWait));
-      if (forcePlay) params.set('scripts', getVideoAutoplaySnippet());
+      if (combinedScripts) params.set('scripts', combinedScripts);
 
       const headers = {};
       if (cfg.apiKey) headers['x-api-key'] = cfg.apiKey;
@@ -2418,10 +2591,15 @@
       params.set('width', String(state.viewportW));
       params.set('height', String(state.viewportH));
       params.set('duration', String(duration));
+
+      // Native dark_mode option for Urlbox
+      if (state.colorScheme === 'dark') {
+        params.set('dark_mode', 'true');
+      }
       
       const totalWait = preloadMs + heroHoldMs;
       if (totalWait > 0) params.set('delay', String(totalWait));
-      if (forcePlay) params.set('js', getVideoAutoplaySnippet());
+      if (combinedScripts) params.set('js', combinedScripts);
 
       if ($('blockAds').checked) params.set('block_ads', 'true');
       if ($('blockCookies').checked) params.set('hide_cookie_banners', 'true');
@@ -2457,6 +2635,9 @@
         .replace(/\{\{height\}\}/g, String(state.viewportH))
         .replace(/\{\{format\}\}/g, state.format)
         .replace(/\{\{scroll\}\}/g, isScroll ? 'true' : 'false')
+        .replace(/\{\{color_scheme\}\}/g, state.colorScheme)
+        .replace(/\{\{dark_mode\}\}/g, state.colorScheme === 'dark' ? 'true' : 'false')
+        .replace(/\{\{theme\}\}/g, state.colorScheme)
         .replace(/\{\{key\}\}/g, encodeURIComponent(cfg.apiKey || ''));
 
       return {
@@ -2542,7 +2723,8 @@
     $('openBtn').style.display = 'none';
     $('recordBtn').disabled = true;
 
-    const metaLabel = `${built.provider.toUpperCase()} · ${state.format.toUpperCase()} · ${state.viewportW}×${state.viewportH}${state.heroHoldSecs > 0 ? ' · ' + state.heroHoldSecs + 's HERO' : ''}`;
+    const themeTag = state.colorScheme !== 'system' ? ` · ${state.colorScheme.toUpperCase()}` : '';
+    const metaLabel = `${built.provider.toUpperCase()} · ${state.format.toUpperCase()} · ${state.viewportW}×${state.viewportH}${themeTag}${state.heroHoldSecs > 0 ? ' · ' + state.heroHoldSecs + 's HERO' : ''}`;
     let elapsed = 0;
     setViewfinder('loading', { elapsed, provider: built.provider, meta: metaLabel });
     
@@ -2638,6 +2820,7 @@
       format: state.format,
       viewport: state.viewportW + '×' + state.viewportH,
       heroHold: state.heroHoldSecs,
+      colorScheme: state.colorScheme,
       duration: $('duration').value,
       timestamp: Date.now(),
       directUrl: directUrl
@@ -2659,13 +2842,14 @@
       card.className = 'reel-card';
       const when = new Date(item.timestamp);
       const delayBadge = item.heroHold ? ` · ${item.heroHold}s hero` : '';
+      const themeBadge = (item.colorScheme && item.colorScheme !== 'system') ? ` · ${item.colorScheme}` : '';
       card.innerHTML =
         '<div class="reel-header">' +
           '<span class="reel-fmt">' + item.format + ' · ' + item.viewport + '</span>' +
           '<span class="reel-provider">' + (item.provider || 'REC') + '</span>' +
         '</div>' +
         '<div class="reel-url">' + item.site.replace(/^https?:\/\//, '') + '</div>' +
-        '<div class="reel-meta">' + when.toLocaleDateString() + ' ' + when.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + delayBadge + '</div>';
+        '<div class="reel-meta">' + when.toLocaleDateString() + ' ' + when.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + delayBadge + themeBadge + '</div>';
       card.addEventListener('click', () => window.open(item.directUrl, '_blank'));
       el.appendChild(card);
     });
