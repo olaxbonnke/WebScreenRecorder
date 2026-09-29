@@ -2274,181 +2274,16 @@
     return u;
   }
 
-  // Script to force all hero and background videos to autoplay & unmute
+  // Ultralight HTML5 video autoplay snippet
   function getVideoAutoplaySnippet(){
-    return `
-      (function(){
-        try {
-          var vids = document.querySelectorAll('video');
-          vids.forEach(function(v){
-            try {
-              v.muted = true;
-              v.setAttribute('muted', '');
-              v.setAttribute('autoplay', '');
-              v.setAttribute('playsinline', '');
-              v.setAttribute('loop', '');
-              v.currentTime = 0;
-              var p = v.play();
-              if (p && p.catch) p.catch(function(){});
-            } catch(e){}
-          });
-        } catch(e){}
-      })();
-    `.replace(/\s+/g, ' ').trim();
+    return `(function(){try{document.querySelectorAll('video').forEach(function(v){try{v.muted=true;v.autoplay=true;v.loop=true;v.play();}catch(e){}});}catch(e){}})();`;
   }
 
-  // Autonomous scanner that finds and clicks theme toggles without requiring user configuration
+  // Ultralight autonomous theme activation script (~550 bytes)
   function getThemeActivationSnippet(scheme){
     if (!scheme || scheme === 'system') return '';
-    const targetMode = scheme; // 'light' or 'dark'
-
-    return `
-      (function(){
-        try {
-          var targetMode = '${targetMode}';
-
-          function findAndClickToggle() {
-            var html = document.documentElement;
-            var body = document.body;
-
-            function isDark() {
-              if (html && (html.classList.contains('dark') || html.classList.contains('dark-theme') || html.classList.contains('theme-dark'))) return true;
-              if (body && (body.classList.contains('dark') || body.classList.contains('dark-theme') || body.classList.contains('theme-dark'))) return true;
-              var dAttr = ((html && html.getAttribute('data-theme')) || (body && body.getAttribute('data-theme')) || '').toLowerCase();
-              if (dAttr.indexOf('dark') !== -1) return true;
-              var mAttr = ((html && html.getAttribute('data-mode')) || (body && body.getAttribute('data-mode')) || '').toLowerCase();
-              if (mAttr.indexOf('dark') !== -1) return true;
-              var cAttr = ((html && html.getAttribute('data-color-mode')) || '').toLowerCase();
-              if (cAttr.indexOf('dark') !== -1) return true;
-              var sAttr = ((html && html.getAttribute('color-scheme')) || '').toLowerCase();
-              if (sAttr.indexOf('dark') !== -1) return true;
-              return false;
-            }
-
-            var currentDark = isDark();
-            var shouldToggle = (targetMode === 'dark' && !currentDark) || (targetMode === 'light' && currentDark);
-
-            if (shouldToggle) {
-              // 1. Check common toggle selectors
-              var selectors = [
-                'button[aria-label*="dark" i]', 'button[aria-label*="light" i]', 'button[aria-label*="theme" i]', 'button[aria-label*="mode" i]', 'button[aria-label*="color" i]',
-                'button[title*="dark" i]', 'button[title*="light" i]', 'button[title*="theme" i]', 'button[title*="mode" i]',
-                'button[id*="theme" i]', 'button[id*="dark" i]', 'button[id*="light" i]', 'button[id*="mode" i]',
-                'button[class*="theme" i]', 'button[class*="dark" i]', 'button[class*="light" i]', 'button[class*="mode" i]',
-                '[data-theme-toggle]', '[data-toggle-theme]', '[data-theme-switcher]', '[data-mode-toggle]',
-                'input[type="checkbox"][id*="theme" i]', 'input[type="checkbox"][id*="dark" i]', 'input[type="checkbox"][class*="theme" i]',
-                'a[href*="theme" i]', 'div[role="switch"]', 'button[role="switch"]'
-              ];
-
-              var found = false;
-              for (var i = 0; i < selectors.length; i++) {
-                try {
-                  var els = document.querySelectorAll(selectors[i]);
-                  for (var j = 0; j < els.length; j++) {
-                    var el = els[j];
-                    if (el && (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0)) {
-                      el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-                      el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-                      el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-                      el.click();
-                      found = true;
-                      break;
-                    }
-                  }
-                  if (found) break;
-                } catch(e){}
-              }
-
-              // 2. Scan interactive elements with SVG icons (sun / moon)
-              if (!found) {
-                try {
-                  var candidates = document.querySelectorAll('button, [role="button"], a');
-                  for (var c = 0; c < candidates.length; c++) {
-                    var cand = candidates[c];
-                    var candHtml = (cand.innerHTML || '').toLowerCase();
-                    var candText = (cand.innerText || cand.textContent || '').toLowerCase().trim();
-                    if (candHtml.indexOf('sun') !== -1 || candHtml.indexOf('moon') !== -1 ||
-                        candHtml.indexOf('lucide-sun') !== -1 || candHtml.indexOf('lucide-moon') !== -1 ||
-                        candHtml.indexOf('feather-sun') !== -1 || candHtml.indexOf('feather-moon') !== -1 ||
-                        candText === 'theme' || candText === 'dark' || candText === 'light') {
-                      cand.click();
-                      found = true;
-                      break;
-                    }
-                  }
-                } catch(e){}
-              }
-            }
-
-            // 3. Fallback: enforce DOM classes and state attributes directly
-            if (targetMode === 'dark') {
-              if (html) {
-                html.classList.add('dark');
-                html.classList.remove('light');
-                html.setAttribute('data-theme', 'dark');
-                html.setAttribute('data-mode', 'dark');
-                html.setAttribute('data-color-mode', 'dark');
-                html.setAttribute('color-scheme', 'dark');
-              }
-              if (body) {
-                body.classList.add('dark');
-                body.classList.remove('light');
-                body.setAttribute('data-theme', 'dark');
-                body.setAttribute('data-mode', 'dark');
-              }
-              try {
-                localStorage.setItem('theme', 'dark');
-                localStorage.setItem('color-theme', 'dark');
-                localStorage.setItem('darkMode', 'true');
-                localStorage.setItem('chakra-ui-color-mode', 'dark');
-                localStorage.setItem('docusaurus.theme', 'dark');
-                localStorage.setItem('theme-mode', 'dark');
-              } catch(e){}
-            } else if (targetMode === 'light') {
-              if (html) {
-                html.classList.remove('dark');
-                html.classList.add('light');
-                html.setAttribute('data-theme', 'light');
-                html.setAttribute('data-mode', 'light');
-                html.setAttribute('data-color-mode', 'light');
-                html.setAttribute('color-scheme', 'light');
-              }
-              if (body) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                body.setAttribute('data-theme', 'light');
-                body.setAttribute('data-mode', 'light');
-              }
-              try {
-                localStorage.setItem('theme', 'light');
-                localStorage.setItem('color-theme', 'light');
-                localStorage.setItem('darkMode', 'false');
-                localStorage.setItem('chakra-ui-color-mode', 'light');
-                localStorage.setItem('docusaurus.theme', 'light');
-                localStorage.setItem('theme-mode', 'light');
-              } catch(e){}
-            }
-
-            // 4. Force browser styling via CSS
-            var style = document.getElementById('__webrecord_cs_override__');
-            if (!style) {
-              style = document.createElement('style');
-              style.id = '__webrecord_cs_override__';
-              (document.head || html).appendChild(style);
-            }
-            style.textContent = ':root { color-scheme: ' + targetMode + ' !important; }';
-          }
-
-          findAndClickToggle();
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', findAndClickToggle);
-          }
-          setTimeout(findAndClickToggle, 150);
-          setTimeout(findAndClickToggle, 500);
-          setTimeout(findAndClickToggle, 1200);
-        } catch(e){}
-      })();
-    `.replace(/\s+/g, ' ').trim();
+    const isD = scheme === 'dark';
+    return `(function(){try{var d=${isD},h=document.documentElement,b=document.body;function t(){var c=h.classList.contains('dark')||(h.getAttribute('data-theme')||'').includes('dark');if((d&&!c)||(!d&&c)){var q=['[aria-label*="dark" i]','[aria-label*="light" i]','[aria-label*="theme" i]','[title*="theme" i]','button[id*="theme" i]','button[class*="theme" i]','[data-theme-toggle]','input[id*="theme" i]'];for(var i=0;i<q.length;i++){var e=document.querySelector(q[i]);if(e){e.click();break;}}}if(d){h.classList.add('dark');h.setAttribute('data-theme','dark');try{localStorage.setItem('theme','dark');}catch(e){}}else{h.classList.remove('dark');h.setAttribute('data-theme','light');try{localStorage.setItem('theme','light');}catch(e){}}}t();document.addEventListener('DOMContentLoaded',t);setTimeout(t,400);}catch(e){}})();`;
   }
 
   // ---------- Provider Request Builder ----------
@@ -2480,55 +2315,66 @@
       const cfg = state.providers.screenshotone;
       if (!cfg.accessKey) return { error: 'ScreenshotOne access key is missing. Open settings to enter it.' };
 
-      const params = new URLSearchParams();
-      params.set('url', site);
-      params.set('access_key', cfg.accessKey);
-      params.set('format', state.format);
-      params.set('duration', duration);
-      params.set('scenario', isScroll ? 'scroll' : 'default');
-      params.set('viewport_width', String(state.viewportW));
-      params.set('viewport_height', String(state.viewportH));
+      const payload = {
+        url: site,
+        access_key: cfg.accessKey,
+        format: state.format,
+        duration: parseInt(duration, 10),
+        scenario: isScroll ? 'scroll' : 'default',
+        viewport_width: state.viewportW,
+        viewport_height: state.viewportH,
+        block_ads: $('blockAds').checked,
+        block_cookie_banners: $('blockCookies').checked,
+        block_chats: $('blockChats').checked,
+        block_trackers: $('blockTrackers').checked
+      };
 
-      // Native ScreenshotOne dark mode parameter
       if (state.colorScheme === 'dark') {
-        params.set('dark_mode', 'true');
+        payload.dark_mode = true;
       } else if (state.colorScheme === 'light') {
-        params.set('dark_mode', 'false');
+        payload.dark_mode = false;
       }
 
       if (preloadS > 0) {
-        params.set('delay', String(preloadS));
+        payload.delay = preloadS;
       }
 
       if (isScroll) {
-        params.set('scroll_start_delay', String(heroHoldMs));
-        params.set('scroll_by', String(scrollDistPx));
-        params.set('scroll_duration', String(scrollDurMs));
-        params.set('scroll_delay', $('scrollDelay').value);
-        params.set('scroll_easing', $('scrollEasing').value);
-        params.set('scroll_back', scrollBack ? 'true' : 'false');
+        payload.scroll_start_delay = heroHoldMs;
+        payload.scroll_by = scrollDistPx;
+        payload.scroll_duration = scrollDurMs;
+        payload.scroll_delay = parseInt($('scrollDelay').value, 10) || 500;
+        payload.scroll_easing = $('scrollEasing').value;
+        payload.scroll_back = scrollBack;
       }
 
       if (combinedScripts) {
-        params.set('scripts', combinedScripts);
+        payload.scripts = combinedScripts;
       }
 
-      params.set('block_ads', $('blockAds').checked);
-      params.set('block_cookie_banners', $('blockCookies').checked);
-      params.set('block_chats', $('blockChats').checked);
-      params.set('block_trackers', $('blockTrackers').checked);
+      // Also construct fallback GET URL (without heavy scripts) in case user wants to inspect or open in browser
+      const fallbackParams = new URLSearchParams();
+      fallbackParams.set('url', site);
+      fallbackParams.set('access_key', cfg.accessKey);
+      fallbackParams.set('format', state.format);
+      fallbackParams.set('duration', duration);
+      fallbackParams.set('scenario', isScroll ? 'scroll' : 'default');
+      fallbackParams.set('viewport_width', String(state.viewportW));
+      fallbackParams.set('viewport_height', String(state.viewportH));
+      if (state.colorScheme === 'dark') fallbackParams.set('dark_mode', 'true');
+      if (state.colorScheme === 'light') fallbackParams.set('dark_mode', 'false');
+      if (preloadS > 0) fallbackParams.set('delay', String(preloadS));
 
-      let queryString = params.toString();
-      if (cfg.secretKey) {
-        const signature = await signQuery(queryString, cfg.secretKey);
-        queryString += '&signature=' + signature;
-      }
+      let getUrl = 'https://api.screenshotone.com/animate?' + fallbackParams.toString();
 
       return {
         provider: 'ScreenshotOne',
-        url: 'https://api.screenshotone.com/animate?' + queryString,
+        url: 'https://api.screenshotone.com/animate',
         site,
-        headers: {}
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        directUrl: getUrl
       };
     }
 
@@ -2767,9 +2613,15 @@
     }, 1000);
 
     try {
-      const response = await fetch(built.url, {
+      const fetchOpts = {
+        method: built.method || 'GET',
         headers: built.headers || {}
-      });
+      };
+      if (built.body) {
+        fetchOpts.body = built.body;
+      }
+
+      const response = await fetch(built.url, fetchOpts);
       const contentType = response.headers.get('content-type') || '';
 
       if (contentType.includes('application/json')) {
@@ -2783,9 +2635,10 @@
           setViewfinder('playing', { src: foundUrl, meta: metaLabel });
           $('downloadBtn').style.display = 'inline-block';
           $('openBtn').style.display = 'inline-block';
-          $('downloadBtn').onclick = () => window.open(foundUrl, '_blank');
-          $('openBtn').onclick = () => window.open(foundUrl, '_blank');
-          recordToHistory(built, foundUrl);
+          const outUrl = foundUrl || built.directUrl || built.url;
+          $('downloadBtn').onclick = () => window.open(outUrl, '_blank');
+          $('openBtn').onclick = () => window.open(outUrl, '_blank');
+          recordToHistory(built, outUrl);
           return;
         }
 
@@ -2793,7 +2646,14 @@
       }
 
       if (!response.ok) {
-        throw new Error(`${built.provider} error (status ${response.status}). Click "Open direct link" to inspect.`);
+        let msg = `${built.provider} error (status ${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData.error_message || errData.message || errData.error) {
+            msg = `${built.provider}: ${errData.error_message || errData.message || errData.error}`;
+          }
+        } catch(e){}
+        throw new Error(msg);
       }
 
       const blob = await response.blob();
@@ -2810,32 +2670,34 @@
         a.download = `Web-Record-Tool-${state.provider}-${Date.now()}.${state.format}`;
         a.click();
       };
-      $('openBtn').onclick = () => window.open(built.url, '_blank');
+      const fallbackViewUrl = built.directUrl || built.url;
+      $('openBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
 
-      recordToHistory(built, built.url);
+      recordToHistory(built, fallbackViewUrl);
 
     } catch (err) {
       clearInterval(elapsedTimer);
+      const fallbackViewUrl = built.directUrl || built.url;
       const video = document.createElement('video');
       video.className = 'vf-video';
       video.controls = true;
       video.autoplay = true;
       video.loop = true;
-      video.src = built.url;
+      video.src = fallbackViewUrl;
       video.onloadeddata = () => {
         $('vfBody').style.display = 'none';
         $('vfRecLabel').textContent = 'READY';
         $('tapeFill').style.width = '100%';
         $('downloadBtn').style.display = 'inline-block';
         $('openBtn').style.display = 'inline-block';
-        $('downloadBtn').onclick = () => window.open(built.url, '_blank');
-        $('openBtn').onclick = () => window.open(built.url, '_blank');
-        recordToHistory(built, built.url);
+        $('downloadBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
+        $('openBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
+        recordToHistory(built, fallbackViewUrl);
       };
       video.onerror = () => {
         setViewfinder('error', { message: `${built.provider}: ${err.message || "Failed to render video"}. Check your API key and URL.` });
         $('openBtn').style.display = 'inline-block';
-        $('openBtn').onclick = () => window.open(built.url, '_blank');
+        $('openBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
       };
       $('viewfinder').insertBefore(video, $('viewfinder').querySelector('.tape-track'));
     } finally {
