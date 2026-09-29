@@ -1262,20 +1262,17 @@
       <input type="text" id="siteUrl" placeholder="https://example.com" autocomplete="off" />
     </div>
 
-    <!-- Site Color Scheme & Theme Toggle Detection -->
+    <!-- Site Color Scheme & Automatic Theme Detection -->
     <div class="field" id="fieldColorScheme">
       <label class="label">
         <span>Captured Page Mode (Light / Dark)</span>
         <span class="badge-tag" id="colorSchemeBadge">Original Site Theme</span>
       </label>
-      <p class="hint" style="margin-top:0; margin-bottom:10px;">Select whether the recorded webpage should appear in light or dark mode. The tool automatically detects and clicks the webpage's theme toggle button, switches framework themes (e.g. Tailwind, Next.js, Docusaurus), and sets the system color scheme before recording starts.</p>
+      <p class="hint" style="margin-top:0; margin-bottom:10px;">Select whether the recorded webpage should be in light or dark mode. The tool automatically finds and clicks the website's theme toggle, switches CSS theme classes, and adjusts color schemes without requiring any manual setup.</p>
       <div class="chips" id="colorSchemeChips">
         <span class="chip active" data-scheme="system">⚙ Original / System</span>
         <span class="chip" data-scheme="light">☀ Light Mode</span>
         <span class="chip" data-scheme="dark">🌙 Dark Mode</span>
-      </div>
-      <div style="margin-top: 8px;">
-        <input type="text" id="customThemeSelector" placeholder="Custom theme toggle selector (optional, e.g. #theme-toggle or button[aria-label*='theme'])" style="font-size:12px; padding: 7px 10px;" autocomplete="off" />
       </div>
     </div>
 
@@ -1568,7 +1565,7 @@
       <p class="docs-faq-a">Headless browsers pause HTML5 video autoplay unless explicitly unmuted and triggered. Keep "Force Autoplay & Wakeup HTML5 Videos" checked to automatically start all video elements.</p>
 
       <p class="docs-faq-q">Q: How does the Light / Dark mode toggle detection work?</p>
-      <p class="docs-faq-a">When you select <strong>☀ Light Mode</strong> or <strong>🌙 Dark Mode</strong>, the recorder automatically scans the target website for theme toggle buttons, clicks the toggle to activate your desired theme, sets CSS classes (like <code>.dark</code> / <code>.light</code>) and attributes (<code>data-theme</code>), and overrides <code>color-scheme</code> media queries before recording starts. You can also specify a custom CSS selector if the website uses an unusual toggle button.</p>
+      <p class="docs-faq-a">When you select <strong>☀ Light Mode</strong> or <strong>🌙 Dark Mode</strong>, the tool automatically scans the target webpage for theme toggle buttons, sun/moon icons, switch roles, and framework triggers. It clicks the toggle, sets corresponding CSS theme classes, and adjusts color scheme properties before capturing starts — completely hands-free.</p>
 
       <p class="docs-faq-q">Q: What is the difference between Hero Hold and Pre-Record Buffer?</p>
       <p class="docs-faq-a"><strong>Pre-Record Buffer:</strong> Happens before video capture begins to let web fonts, assets, and 3D scenes load.<br><strong>Hero Hold:</strong> Is captured inside the video so the viewer sees the hero video play before the camera scrolls down.</p>
@@ -2300,121 +2297,155 @@
     `.replace(/\s+/g, ' ').trim();
   }
 
-  // Script that automatically discovers and triggers the page's theme toggle,
-  // updates HTML attributes/classes, and forces prefers-color-scheme styles
-  function getThemeActivationSnippet(scheme, customSelector){
-    if (scheme === 'system' && !customSelector) return '';
-    const targetMode = scheme; // 'light', 'dark', or 'system'
-    const cleanCustom = (customSelector || '').replace(/"/g, '\\"');
+  // Autonomous scanner that finds and clicks theme toggles without requiring user configuration
+  function getThemeActivationSnippet(scheme){
+    if (!scheme || scheme === 'system') return '';
+    const targetMode = scheme; // 'light' or 'dark'
 
     return `
       (function(){
         try {
           var targetMode = '${targetMode}';
-          var customSel = '${cleanCustom}';
 
-          function executeThemeSwitch() {
+          function findAndClickToggle() {
             var html = document.documentElement;
             var body = document.body;
 
-            // 1. Try custom selector if specified by user
-            if (customSel) {
-              try {
-                var customEl = document.querySelector(customSel);
-                if (customEl) {
-                  customEl.click();
-                  return;
-                }
-              } catch(e){}
-            }
-
-            if (targetMode === 'system') return;
-
-            // Determine if the page is currently in dark mode
-            function isCurrentlyDark() {
-              if (html.classList.contains('dark') || (body && body.classList.contains('dark'))) return true;
-              var dAttr = (html.getAttribute('data-theme') || (body && body.getAttribute('data-theme')) || '').toLowerCase();
-              if (dAttr.includes('dark')) return true;
-              var mAttr = (html.getAttribute('data-mode') || (body && body.getAttribute('data-mode')) || '').toLowerCase();
-              if (mAttr.includes('dark')) return true;
-              var colAttr = (html.getAttribute('data-color-mode') || '').toLowerCase();
-              if (colAttr.includes('dark')) return true;
+            function isDark() {
+              if (html && (html.classList.contains('dark') || html.classList.contains('dark-theme') || html.classList.contains('theme-dark'))) return true;
+              if (body && (body.classList.contains('dark') || body.classList.contains('dark-theme') || body.classList.contains('theme-dark'))) return true;
+              var dAttr = ((html && html.getAttribute('data-theme')) || (body && body.getAttribute('data-theme')) || '').toLowerCase();
+              if (dAttr.indexOf('dark') !== -1) return true;
+              var mAttr = ((html && html.getAttribute('data-mode')) || (body && body.getAttribute('data-mode')) || '').toLowerCase();
+              if (mAttr.indexOf('dark') !== -1) return true;
+              var cAttr = ((html && html.getAttribute('data-color-mode')) || '').toLowerCase();
+              if (cAttr.indexOf('dark') !== -1) return true;
+              var sAttr = ((html && html.getAttribute('color-scheme')) || '').toLowerCase();
+              if (sAttr.indexOf('dark') !== -1) return true;
               return false;
             }
 
-            var currentlyDark = isCurrentlyDark();
-            var needsClick = (targetMode === 'dark' && !currentlyDark) || (targetMode === 'light' && currentlyDark);
+            var currentDark = isDark();
+            var shouldToggle = (targetMode === 'dark' && !currentDark) || (targetMode === 'light' && currentDark);
 
-            // Comprehensive selectors for theme toggles in modern web apps
-            var toggleSelectors = [
-              'button[id*="theme"]', 'button[id*="dark"]', 'button[id*="mode"]', 'button[id*="color-scheme"]',
-              'button[class*="theme"]', 'button[class*="dark-mode"]', 'button[class*="light-mode"]',
-              'button[class*="mode-toggle"]', 'button[class*="theme-toggle"]',
-              'button[aria-label*="theme" i]', 'button[aria-label*="dark" i]', 'button[aria-label*="light" i]', 'button[aria-label*="color mode" i]',
-              'button[title*="theme" i]', 'button[title*="dark" i]', 'button[title*="light" i]',
-              '[data-theme-toggle]', '[data-toggle-theme]', '[data-theme-switcher]',
-              'input[type="checkbox"][id*="theme"]', 'input[type="checkbox"][id*="dark"]',
-              '.theme-switch', '.theme-toggle', '.dark-mode-toggle'
-            ];
+            if (shouldToggle) {
+              // 1. Check common toggle selectors
+              var selectors = [
+                'button[aria-label*="dark" i]', 'button[aria-label*="light" i]', 'button[aria-label*="theme" i]', 'button[aria-label*="mode" i]', 'button[aria-label*="color" i]',
+                'button[title*="dark" i]', 'button[title*="light" i]', 'button[title*="theme" i]', 'button[title*="mode" i]',
+                'button[id*="theme" i]', 'button[id*="dark" i]', 'button[id*="light" i]', 'button[id*="mode" i]',
+                'button[class*="theme" i]', 'button[class*="dark" i]', 'button[class*="light" i]', 'button[class*="mode" i]',
+                '[data-theme-toggle]', '[data-toggle-theme]', '[data-theme-switcher]', '[data-mode-toggle]',
+                'input[type="checkbox"][id*="theme" i]', 'input[type="checkbox"][id*="dark" i]', 'input[type="checkbox"][class*="theme" i]',
+                'a[href*="theme" i]', 'div[role="switch"]', 'button[role="switch"]'
+              ];
 
-            if (needsClick) {
-              for (var i = 0; i < toggleSelectors.length; i++) {
+              var found = false;
+              for (var i = 0; i < selectors.length; i++) {
                 try {
-                  var btn = document.querySelector(toggleSelectors[i]);
-                  if (btn && btn.offsetParent !== null) {
-                    btn.click();
-                    break;
+                  var els = document.querySelectorAll(selectors[i]);
+                  for (var j = 0; j < els.length; j++) {
+                    var el = els[j];
+                    if (el && (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0)) {
+                      el.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+                      el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+                      el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                      el.click();
+                      found = true;
+                      break;
+                    }
+                  }
+                  if (found) break;
+                } catch(e){}
+              }
+
+              // 2. Scan interactive elements with SVG icons (sun / moon)
+              if (!found) {
+                try {
+                  var candidates = document.querySelectorAll('button, [role="button"], a');
+                  for (var c = 0; c < candidates.length; c++) {
+                    var cand = candidates[c];
+                    var candHtml = (cand.innerHTML || '').toLowerCase();
+                    var candText = (cand.innerText || cand.textContent || '').toLowerCase().trim();
+                    if (candHtml.indexOf('sun') !== -1 || candHtml.indexOf('moon') !== -1 ||
+                        candHtml.indexOf('lucide-sun') !== -1 || candHtml.indexOf('lucide-moon') !== -1 ||
+                        candHtml.indexOf('feather-sun') !== -1 || candHtml.indexOf('feather-moon') !== -1 ||
+                        candText === 'theme' || candText === 'dark' || candText === 'light') {
+                      cand.click();
+                      found = true;
+                      break;
+                    }
                   }
                 } catch(e){}
               }
             }
 
-            // Framework & DOM fallbacks (Tailwind, Bootstrap, Docusaurus, Next.js, Radix)
+            // 3. Fallback: enforce DOM classes and state attributes directly
             if (targetMode === 'dark') {
-              html.classList.add('dark');
-              html.classList.remove('light');
-              if (body) { body.classList.add('dark'); body.classList.remove('light'); }
-              html.setAttribute('data-theme', 'dark');
-              html.setAttribute('data-mode', 'dark');
-              html.setAttribute('data-color-mode', 'dark');
-              html.setAttribute('color-scheme', 'dark');
+              if (html) {
+                html.classList.add('dark');
+                html.classList.remove('light');
+                html.setAttribute('data-theme', 'dark');
+                html.setAttribute('data-mode', 'dark');
+                html.setAttribute('data-color-mode', 'dark');
+                html.setAttribute('color-scheme', 'dark');
+              }
+              if (body) {
+                body.classList.add('dark');
+                body.classList.remove('light');
+                body.setAttribute('data-theme', 'dark');
+                body.setAttribute('data-mode', 'dark');
+              }
               try {
                 localStorage.setItem('theme', 'dark');
                 localStorage.setItem('color-theme', 'dark');
                 localStorage.setItem('darkMode', 'true');
                 localStorage.setItem('chakra-ui-color-mode', 'dark');
                 localStorage.setItem('docusaurus.theme', 'dark');
+                localStorage.setItem('theme-mode', 'dark');
               } catch(e){}
             } else if (targetMode === 'light') {
-              html.classList.remove('dark');
-              html.classList.add('light');
-              if (body) { body.classList.remove('dark'); body.classList.add('light'); }
-              html.setAttribute('data-theme', 'light');
-              html.setAttribute('data-mode', 'light');
-              html.setAttribute('data-color-mode', 'light');
-              html.setAttribute('color-scheme', 'light');
+              if (html) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                html.setAttribute('data-theme', 'light');
+                html.setAttribute('data-mode', 'light');
+                html.setAttribute('data-color-mode', 'light');
+                html.setAttribute('color-scheme', 'light');
+              }
+              if (body) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                body.setAttribute('data-theme', 'light');
+                body.setAttribute('data-mode', 'light');
+              }
               try {
                 localStorage.setItem('theme', 'light');
                 localStorage.setItem('color-theme', 'light');
                 localStorage.setItem('darkMode', 'false');
                 localStorage.setItem('chakra-ui-color-mode', 'light');
                 localStorage.setItem('docusaurus.theme', 'light');
+                localStorage.setItem('theme-mode', 'light');
               } catch(e){}
             }
 
-            // Force prefers-color-scheme CSS variable & color-scheme overrides
-            var style = document.getElementById('__webrecord_cs_override__') || document.createElement('style');
-            style.id = '__webrecord_cs_override__';
+            // 4. Force browser styling via CSS
+            var style = document.getElementById('__webrecord_cs_override__');
+            if (!style) {
+              style = document.createElement('style');
+              style.id = '__webrecord_cs_override__';
+              (document.head || html).appendChild(style);
+            }
             style.textContent = ':root { color-scheme: ' + targetMode + ' !important; }';
-            if (!style.parentNode) (document.head || html).appendChild(style);
           }
 
+          findAndClickToggle();
           if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', executeThemeSwitch);
-          } else {
-            executeThemeSwitch();
+            document.addEventListener('DOMContentLoaded', findAndClickToggle);
           }
-          setTimeout(executeThemeSwitch, 400);
+          setTimeout(findAndClickToggle, 150);
+          setTimeout(findAndClickToggle, 500);
+          setTimeout(findAndClickToggle, 1200);
         } catch(e){}
       })();
     `.replace(/\s+/g, ' ').trim();
@@ -2436,8 +2467,7 @@
     const scrollDurMs = parseInt($('scrollDuration').value, 10) || 2500;
     const scrollBack = $('scrollBack').checked;
 
-    const customSelector = ($('customThemeSelector') ? $('customThemeSelector').value.trim() : '');
-    const themeSnippet = getThemeActivationSnippet(state.colorScheme, customSelector);
+    const themeSnippet = getThemeActivationSnippet(state.colorScheme);
 
     // Combine scripts to inject
     const combinedScripts = [
