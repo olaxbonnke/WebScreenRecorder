@@ -2456,8 +2456,24 @@
           var maxScroll = Math.max(doc ? doc.scrollHeight : 0, body ? body.scrollHeight : 0) - vh;
           if (maxScroll <= 50) return;
 
-          // Measure live DOM section anchors after page hydration
-          var selectors = 'section, [id^="section"], [id*="-section"], article, main > div, header, footer';
+          // Measure live DOM section anchors and footers after page hydration
+          var selectors = [
+            'section',
+            '[id^="section"]',
+            '[id*="-section"]',
+            'article',
+            'main > div',
+            'header',
+            'footer',
+            '[role="contentinfo"]',
+            '[id*="footer" i]',
+            '[class*="footer" i]',
+            '[id*="bottom" i]',
+            '[class*="bottom" i]',
+            '[id*="cta" i]',
+            '[class*="cta" i]'
+          ].join(', ');
+
           var rawElements = Array.prototype.slice.call(document.querySelectorAll(selectors));
           var targets = [0];
           var seen = {};
@@ -2466,12 +2482,21 @@
             try {
               var rect = el.getBoundingClientRect();
               var top = Math.round(rect.top + (window.pageYOffset || (doc ? doc.scrollTop : 0) || 0));
-              if (rect.height >= 120 && top > 80 && top <= maxScroll + 100) {
-                var clampedTop = Math.min(top, maxScroll);
-                var isNear = targets.some(function(t) { return Math.abs(t - clampedTop) < 150; });
-                if (!isNear && !seen[clampedTop]) {
-                  seen[clampedTop] = true;
-                  targets.push(clampedTop);
+              var tag = el.tagName ? el.tagName.toLowerCase() : '';
+              var isFooter = tag === 'footer' ||
+                             el.getAttribute('role') === 'contentinfo' ||
+                             /footer/i.test(el.className || '') ||
+                             /footer/i.test(el.id || '');
+              
+              var minHeight = isFooter ? 40 : 120;
+
+              if (rect.height >= minHeight && top > 80 && top <= maxScroll + 120) {
+                // If it's a footer, target the position that fully brings the footer into view (maxScroll)
+                var targetY = isFooter ? maxScroll : Math.min(top, maxScroll);
+                var isNear = targets.some(function(t) { return Math.abs(t - targetY) < 140; });
+                if (!isNear && !seen[targetY]) {
+                  seen[targetY] = true;
+                  targets.push(targetY);
                 }
               }
             } catch (e) {}
@@ -2479,12 +2504,43 @@
 
           targets.sort(function(a, b) { return a - b; });
 
+          // If no distinct DOM sections found, fallback to viewport-sized steps
           if (targets.length <= 1) {
             var step = Math.round(vh * 0.9);
             for (var p = step; p < maxScroll; p += step) {
               targets.push(p);
             }
             targets.push(maxScroll);
+          } else {
+            // Guarantee the page bottom / footer is always explicitly visited
+            var lastStop = targets[targets.length - 1];
+            if (maxScroll - lastStop > 140) {
+              targets.push(maxScroll);
+            }
+          }
+
+          // Smart duration budgeting: ensure the tour visits sections and ALWAYS finishes at the footer
+          var availableMs = Math.max(2000, totalDur - heroHold);
+          var effectiveReturnMs = shouldScrollBack ? transDuration : 0;
+          var usableMs = Math.max(1500, availableMs - effectiveReturnMs);
+          var cycleMs = transDuration + pauseDuration;
+          var maxStopsAllowed = Math.max(1, Math.floor(usableMs / cycleMs));
+
+          var stopsAfterHero = targets.slice(1);
+          if (stopsAfterHero.length > maxStopsAllowed) {
+            var sampled = [];
+            var footerStop = stopsAfterHero[stopsAfterHero.length - 1];
+            var stepIdx = (stopsAfterHero.length - 1) / maxStopsAllowed;
+            for (var i = 1; i <= maxStopsAllowed; i++) {
+              var idx = Math.min(stopsAfterHero.length - 1, Math.round(i * stepIdx));
+              sampled.push(stopsAfterHero[idx]);
+            }
+            sampled[sampled.length - 1] = footerStop; // Pin footer as the destination
+            var uniqueSampled = [];
+            sampled.forEach(function(s) {
+              if (uniqueSampled.indexOf(s) === -1) uniqueSampled.push(s);
+            });
+            targets = [0].concat(uniqueSampled);
           }
 
           if (shouldScrollBack && targets.length > 1) {
