@@ -2420,17 +2420,15 @@
 
   // Autonomous Section Auto-Calculation & Smooth Tour Scroll
   // Scans real DOM elements, calculates distance between them, and glides with smooth cubic easing
-  function getSectionTourSnippet(preloadMs, heroHoldMs, totalDurMs, scrollBack, pauseMs, transMs) {
+  function getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, pauseMs, transMs) {
     return `(function(){
       try {
-        var preloadDelay = ${preloadMs || 0};
         var heroHold = ${heroHoldMs || 3000};
         var shouldScrollBack = ${Boolean(scrollBack)};
         var pauseDuration = ${pauseMs || 1200};
         var transDuration = ${transMs || 1800};
-        var totalStartWait = preloadDelay + heroHold;
 
-        // Force scroll strictly to top (0, 0) immediately
+        // Reset scroll strictly to top (0, 0)
         try {
           if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
           window.scrollTo(0, 0);
@@ -2438,62 +2436,37 @@
           if (document.body) document.body.scrollTop = 0;
         } catch (e) {}
 
-        // Keep pinned to (0, 0) throughout warmup and hero hold
-        var pinTimer = setInterval(function() {
-          try {
-            if (window.pageYOffset > 0 || (document.documentElement && document.documentElement.scrollTop > 0)) {
-              window.scrollTo(0, 0);
-            }
-          } catch (e) {}
-        }, 40);
-
-        function startTour() {
-          clearInterval(pinTimer);
-
+        function getTargets() {
           var doc = document.documentElement;
           var body = document.body;
           var vh = window.innerHeight || (doc ? doc.clientHeight : 900);
-          var maxScroll = Math.max(doc ? doc.scrollHeight : 0, body ? body.scrollHeight : 0) - vh;
-          if (maxScroll <= 50) return;
+          var scrollH = Math.max(doc ? doc.scrollHeight : 0, body ? body.scrollHeight : 0, doc ? doc.offsetHeight : 0);
+          var maxScroll = Math.max(0, scrollH - vh);
+          if (maxScroll <= 40) return [0];
 
-          // Measure live DOM section anchors and footers after page hydration
-          var selectors = [
-            'section',
-            '[id^="section"]',
-            '[id*="-section"]',
-            'article',
-            'main > div',
-            'header',
-            'footer',
-            '[role="contentinfo"]',
-            '[id*="footer" i]',
-            '[class*="footer" i]',
-            '[id*="bottom" i]',
-            '[class*="bottom" i]',
-            '[id*="cta" i]',
-            '[class*="cta" i]'
-          ].join(', ');
-
+          // 100% standard CSS selectors - zero illegal attribute flags
+          var selectors = 'section, article, main > div, header, footer, [role="contentinfo"], div[id], [class*="section"]';
           var rawElements = Array.prototype.slice.call(document.querySelectorAll(selectors));
           var targets = [0];
-          var seen = {};
+          var seen = { 0: true };
 
           rawElements.forEach(function(el) {
             try {
               var rect = el.getBoundingClientRect();
               var top = Math.round(rect.top + (window.pageYOffset || (doc ? doc.scrollTop : 0) || 0));
               var tag = el.tagName ? el.tagName.toLowerCase() : '';
+              var id = el.id || '';
+              var cls = typeof el.className === 'string' ? el.className : '';
               var isFooter = tag === 'footer' ||
                              el.getAttribute('role') === 'contentinfo' ||
-                             /footer/i.test(el.className || '') ||
-                             /footer/i.test(el.id || '');
-              
-              var minHeight = isFooter ? 40 : 120;
+                             /footer|bottom|copyright/i.test(id) ||
+                             /footer|bottom|copyright/i.test(cls);
 
-              if (rect.height >= minHeight && top > 80 && top <= maxScroll + 120) {
-                // If it's a footer, target the position that fully brings the footer into view (maxScroll)
+              var minH = isFooter ? 35 : 100;
+
+              if (rect.height >= minH && top > 80 && top <= maxScroll + 150) {
                 var targetY = isFooter ? maxScroll : Math.min(top, maxScroll);
-                var isNear = targets.some(function(t) { return Math.abs(t - targetY) < 140; });
+                var isNear = targets.some(function(t) { return Math.abs(t - targetY) < 120; });
                 if (!isNear && !seen[targetY]) {
                   seen[targetY] = true;
                   targets.push(targetY);
@@ -2504,25 +2477,25 @@
 
           targets.sort(function(a, b) { return a - b; });
 
-          // If no distinct DOM sections found, fallback to viewport-sized steps
+          // Fallback if no sections detected
           if (targets.length <= 1) {
-            var step = Math.round(vh * 0.9);
+            var step = Math.round(vh * 0.85);
             for (var p = step; p < maxScroll; p += step) {
               targets.push(p);
             }
             targets.push(maxScroll);
           } else {
-            // Guarantee the page bottom / footer is always explicitly visited
-            var lastStop = targets[targets.length - 1];
-            if (maxScroll - lastStop > 140) {
+            // ALWAYS guarantee the true bottom / footer is reached
+            var lastTarget = targets[targets.length - 1];
+            if (maxScroll - lastTarget > 120) {
               targets.push(maxScroll);
             }
           }
 
-          // Smart duration budgeting: ensure the tour visits sections and ALWAYS finishes at the footer
-          var availableMs = Math.max(2000, totalDur - heroHold);
-          var effectiveReturnMs = shouldScrollBack ? transDuration : 0;
-          var usableMs = Math.max(1500, availableMs - effectiveReturnMs);
+          // Budget stops evenly across available duration
+          var availableMs = Math.max(2000, ${totalDurMs || 8000} - heroHold);
+          var returnReserveMs = shouldScrollBack ? transDuration : 0;
+          var usableMs = Math.max(1500, availableMs - returnReserveMs);
           var cycleMs = transDuration + pauseDuration;
           var maxStopsAllowed = Math.max(1, Math.floor(usableMs / cycleMs));
 
@@ -2535,7 +2508,7 @@
               var idx = Math.min(stopsAfterHero.length - 1, Math.round(i * stepIdx));
               sampled.push(stopsAfterHero[idx]);
             }
-            sampled[sampled.length - 1] = footerStop; // Pin footer as the destination
+            sampled[sampled.length - 1] = footerStop; // Pin footer as final destination
             var uniqueSampled = [];
             sampled.forEach(function(s) {
               if (uniqueSampled.indexOf(s) === -1) uniqueSampled.push(s);
@@ -2547,33 +2520,47 @@
             targets.push(0);
           }
 
-          function ease(t) {
-            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          return targets;
+        }
+
+        function smoothScrollTo(targetY, duration, callback) {
+          var doc = document.documentElement;
+          var body = document.body;
+          var startY = window.pageYOffset || (doc ? doc.scrollTop : 0) || (body ? body.scrollTop : 0) || 0;
+          var dist = targetY - startY;
+          if (Math.abs(dist) < 4 || duration <= 0) {
+            window.scrollTo(0, targetY);
+            if (doc) doc.scrollTop = targetY;
+            if (body) body.scrollTop = targetY;
+            if (callback) callback();
+            return;
           }
 
-          function smoothScrollTo(targetY, duration, callback) {
-            var startY = window.pageYOffset || (doc ? doc.scrollTop : 0) || 0;
-            var dist = targetY - startY;
-            if (Math.abs(dist) < 5 || duration <= 0) {
+          var startTime = Date.now();
+          var timer = setInterval(function() {
+            var elapsed = Date.now() - startTime;
+            var progress = Math.min(1, elapsed / duration);
+            // Cubic easing
+            var eased = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            var currentY = Math.round(startY + dist * eased);
+
+            window.scrollTo(0, currentY);
+            if (doc) doc.scrollTop = currentY;
+            if (body) body.scrollTop = currentY;
+
+            if (progress >= 1) {
+              clearInterval(timer);
               window.scrollTo(0, targetY);
+              if (doc) doc.scrollTop = targetY;
+              if (body) body.scrollTop = targetY;
               if (callback) callback();
-              return;
             }
-            var startTime = performance.now();
-            function step(curTime) {
-              var elapsed = curTime - startTime;
-              var progress = Math.min(1, elapsed / duration);
-              var eased = ease(progress);
-              window.scrollTo(0, Math.round(startY + dist * eased));
-              if (progress < 1) {
-                requestAnimationFrame(step);
-              } else {
-                window.scrollTo(0, targetY);
-                if (callback) callback();
-              }
-            }
-            requestAnimationFrame(step);
-          }
+          }, 16);
+        }
+
+        function runTour() {
+          var targets = getTargets();
+          if (targets.length <= 1) return;
 
           var currentIndex = 0;
           function advance() {
@@ -2584,12 +2571,15 @@
             });
           }
 
-          // Advance to first section after hero hold has completed on video
-          advance();
+          // Hold steadily at the Hero section, then begin gliding down
+          setTimeout(advance, heroHold);
         }
 
-        // Wait until both warmup and hero hold have elapsed before moving
-        setTimeout(startTour, totalStartWait);
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() { setTimeout(runTour, 50); });
+        } else {
+          setTimeout(runTour, 50);
+        }
       } catch (err) {}
     })();`;
   }
@@ -2623,7 +2613,7 @@
     const sectionPauseMs = parseInt($('sectionPauseTime') ? $('sectionPauseTime').value : 1200, 10) || 1200;
 
     const themeSnippet = getThemeActivationSnippet(state.colorScheme);
-    const tourSnippet = isSectionTour ? getSectionTourSnippet(preloadMs, heroHoldMs, totalDurMs, scrollBack, sectionPauseMs, sectionGlideMs) : '';
+    const tourSnippet = isSectionTour ? getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, sectionPauseMs, sectionGlideMs) : '';
 
     // Combine scripts to inject
     const combinedScripts = [
@@ -2657,17 +2647,19 @@
         payload.dark_mode = false;
       }
 
-      if (preloadS > 0) {
-        payload.delay = preloadS;
-      }
-
       if (isFixedScroll) {
+        if (preloadS > 0) payload.delay = preloadS;
         payload.scroll_start_delay = heroHoldMs;
         payload.scroll_by = scrollDistPx;
         payload.scroll_duration = scrollDurMs;
         payload.scroll_delay = parseInt($('scrollDelay').value, 10) || 500;
         payload.scroll_easing = $('scrollEasing').value;
         payload.scroll_back = scrollBack;
+      } else if (isSectionTour) {
+        // Start video capture immediately at hero (0,0); hero hold is recorded on camera
+        payload.delay = 0;
+      } else {
+        if (preloadS > 0) payload.delay = preloadS;
       }
 
       if (combinedScripts) {
