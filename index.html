@@ -1351,9 +1351,10 @@
     </div>
 
     <div class="field">
-      <label class="label">Motion Behavior</label>
+      <label class="label">Motion &amp; Scroll Mode</label>
       <div class="chips" id="scenarioChips">
-        <span class="chip active" data-scenario="scroll">Hold at Hero + Smooth Scroll</span>
+        <span class="chip active" data-scenario="section">🎯 Auto Scroll by Section (Calculates distance)</span>
+        <span class="chip" data-scenario="scroll">Hold at Hero + Fixed px Scroll</span>
         <span class="chip" data-scenario="default">Hold at Hero Only (No Scroll)</span>
       </div>
     </div>
@@ -1377,60 +1378,68 @@
     </div>
 
     <details class="disclosure" id="scrollDetails" open>
-      <summary>Scroll & Physics Tuning</summary>
+      <summary id="scrollDetailsSummary">Section Tour &amp; Timing Tuning</summary>
       <div class="disclosure-body">
-        <div class="row">
-          <div class="field">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <label class="label" for="scrollBy" style="margin-bottom:0;">Scroll distance (px)</label>
-              <span style="font-size:11px; color:var(--cyan); font-family:var(--mono);" id="scrollRatioNote">≈ 1.3× viewport</span>
+        <!-- Section-based controls (calculates exact distance between DOM sections) -->
+        <div id="sectionModeControls">
+          <div class="row">
+            <div class="field">
+              <label class="label" for="sectionGlideTime">Glide time between sections (ms)</label>
+              <input type="number" id="sectionGlideTime" value="1800" min="400" max="8000" />
             </div>
-            <input type="number" id="scrollBy" value="1200" min="100" max="10000" />
-            <div class="chips" id="scrollPresetChips" style="margin-top:6px;">
-              <span class="chip" data-mode="1x">1× Viewport (<span id="vp1xVal">900px</span>)</span>
-              <span class="chip" data-mode="1.5x">1.5× Viewport</span>
-              <span class="chip active" data-val="1200">1200px</span>
-              <span class="chip" data-val="900">900px</span>
+            <div class="field">
+              <label class="label" for="sectionPauseTime">Pause on each section (ms)</label>
+              <input type="number" id="sectionPauseTime" value="1200" min="200" max="6000" />
             </div>
           </div>
-          <div class="field">
-            <label class="label" for="scrollDuration">Scroll time (ms)</label>
-            <input type="number" id="scrollDuration" value="2500" min="200" max="10000" />
+          <div style="margin-top:6px; margin-bottom:12px; padding:10px 14px; border-radius:8px; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.22); font-size:11.5px; line-height:1.5; color:#94a3b8;">
+            <strong style="color:var(--cyan);">🎯 Section Distance Auto-Calculation:</strong>
+            Scans real DOM section coordinates (<code>&lt;section&gt;</code>, <code>[id]</code>, <code>main &gt; div</code>) on the page and calculates the exact pixel distance dynamically. Zero overshooting, zero blank padding, and zero fighting with viewport scroll snap.
           </div>
         </div>
-        <div class="row">
-          <div class="field">
-            <label class="label" for="scrollDelay">Delay between scrolls (ms)</label>
-            <input type="number" id="scrollDelay" value="500" min="0" max="5000" />
+
+        <!-- Fixed pixel controls (shown when 'scroll' scenario is selected) -->
+        <div id="fixedPixelControls" style="display:none;">
+          <div class="row">
+            <div class="field">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <label class="label" for="scrollBy" style="margin-bottom:0;">Scroll distance (px)</label>
+                <span style="font-size:11px; color:var(--cyan); font-family:var(--mono);" id="scrollRatioNote">≈ 1.3× viewport</span>
+              </div>
+              <input type="number" id="scrollBy" value="1200" min="100" max="10000" />
+              <div class="chips" id="scrollPresetChips" style="margin-top:6px;">
+                <span class="chip" data-mode="1x">1× Viewport (<span id="vp1xVal">900px</span>)</span>
+                <span class="chip" data-mode="1.5x">1.5× Viewport</span>
+                <span class="chip active" data-val="1200">1200px</span>
+                <span class="chip" data-val="900">900px</span>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label" for="scrollDuration">Scroll time (ms)</label>
+              <input type="number" id="scrollDuration" value="2500" min="200" max="10000" />
+            </div>
           </div>
-          <div class="field">
-            <label class="label" for="scrollEasing">Easing Curve</label>
-            <select id="scrollEasing">
-              <option value="ease_in_out_quint" selected>Ease in-out quint (Smooth cinematic)</option>
-              <option value="linear">Linear</option>
-              <option value="ease_in_out_cubic">Ease in-out cubic</option>
-              <option value="ease_out_quad">Ease out quad</option>
-            </select>
+          <div class="row">
+            <div class="field">
+              <label class="label" for="scrollDelay">Delay between scrolls (ms)</label>
+              <input type="number" id="scrollDelay" value="500" min="0" max="5000" />
+            </div>
+            <div class="field">
+              <label class="label" for="scrollEasing">Easing Curve</label>
+              <select id="scrollEasing">
+                <option value="ease_in_out_quint" selected>Ease in-out quint (Smooth cinematic)</option>
+                <option value="linear">Linear</option>
+                <option value="ease_in_out_cubic">Ease in-out cubic</option>
+                <option value="ease_out_quad">Ease out quad</option>
+              </select>
+            </div>
           </div>
         </div>
 
         <label class="toggle" style="margin-top:6px;">
-          <input type="checkbox" id="sectionSnap" checked />
-          <span><strong>Smart Section Alignment (Prevents blank space &amp; drift)</strong></span>
-        </label>
-        <p class="hint" style="margin-top:2px; margin-bottom:8px;">
-          Injects smart CSS scroll-snap anchors (<code>&lt;section&gt;</code>, <code>[id]</code>, <code>main &gt; div</code>) so video sweeps lock smoothly onto headings &amp; section tops rather than overshooting into empty margins.
-        </p>
-
-        <label class="toggle">
           <input type="checkbox" id="scrollBack" checked />
           <span>Scroll back to top before finishing</span>
         </label>
-
-        <div style="margin-top:12px; padding:10px 14px; border-radius:8px; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.22); font-size:11.5px; line-height:1.5; color:#94a3b8;">
-          <strong style="color:var(--cyan);">💡 Pro-Tip for Clean Section Recordings:</strong>
-          Webpage sections vary in height. If scrolling by 900px overshoots or lands in blank space, keep <strong>Smart Section Alignment</strong> enabled or use <strong>1× Viewport</strong> to align with your screen dimensions.
-        </div>
       </div>
     </details>
 
@@ -1964,10 +1973,11 @@
     preloadDelaySecs: 2,
     viewportW: 1440,
     viewportH: 900,
-    scenario: 'scroll',
+    scenario: 'section',
+    sectionGlideTime: 1800,
+    sectionPauseTime: 1200,
     format: 'mp4',
     colorScheme: 'system',   // 'system' | 'light' | 'dark'
-    sectionSnap: true,
     history: []
   };
 
@@ -2004,7 +2014,9 @@
         if (cfg.providers) state.providers = { ...state.providers, ...cfg.providers };
         if (cfg.heroHoldSecs !== undefined) state.heroHoldSecs = cfg.heroHoldSecs;
         if (cfg.preloadDelaySecs !== undefined) state.preloadDelaySecs = cfg.preloadDelaySecs;
-        if (cfg.sectionSnap !== undefined) state.sectionSnap = cfg.sectionSnap;
+        if (cfg.scenario) state.scenario = cfg.scenario;
+        if (cfg.sectionGlideTime !== undefined) state.sectionGlideTime = cfg.sectionGlideTime;
+        if (cfg.sectionPauseTime !== undefined) state.sectionPauseTime = cfg.sectionPauseTime;
       } else {
         const legacy = await storageEngine.get('config_multi_v5') || await storageEngine.get('config_multi_v4');
         if (legacy) {
@@ -2035,7 +2047,9 @@
         providers: state.providers,
         heroHoldSecs: state.heroHoldSecs,
         preloadDelaySecs: state.preloadDelaySecs,
-        sectionSnap: state.sectionSnap
+        scenario: state.scenario,
+        sectionGlideTime: state.sectionGlideTime,
+        sectionPauseTime: state.sectionPauseTime
       }));
       return true;
     } catch (e) {
@@ -2072,12 +2086,15 @@
     setHeroHoldUI(state.heroHoldSecs);
     $('preloadRange').value = state.preloadDelaySecs;
     $('preloadVal').textContent = state.preloadDelaySecs + 's';
-    if ($('sectionSnap')) $('sectionSnap').checked = state.sectionSnap !== false;
+
+    if ($('sectionGlideTime')) $('sectionGlideTime').value = state.sectionGlideTime || 1800;
+    if ($('sectionPauseTime')) $('sectionPauseTime').value = state.sectionPauseTime || 1200;
 
     document.querySelectorAll('#providerChips .chip').forEach(c => {
       c.classList.toggle('active', c.dataset.provider === state.provider);
     });
     switchProviderTab(state.provider);
+    updateScenarioUI();
     if (typeof updateScrollHelperUI === 'function') updateScrollHelperUI();
   }
 
@@ -2248,17 +2265,53 @@
     document.querySelectorAll('#scrollPresetChips .chip').forEach(c => c.classList.remove('active'));
   });
 
-  if ($('sectionSnap')) {
-    $('sectionSnap').addEventListener('change', (e) => {
-      state.sectionSnap = e.target.checked;
-      saveConfig();
+  function updateScenarioUI() {
+    const sc = state.scenario || 'section';
+    const secControls = $('sectionModeControls');
+    const fixControls = $('fixedPixelControls');
+    const scrollDetails = $('scrollDetails');
+    const summary = $('scrollDetailsSummary');
+
+    document.querySelectorAll('#scenarioChips .chip').forEach(c => {
+      c.classList.toggle('active', c.dataset.scenario === sc);
     });
+
+    if (sc === 'section') {
+      if (scrollDetails) scrollDetails.style.display = 'block';
+      if (secControls) secControls.style.display = 'block';
+      if (fixControls) fixControls.style.display = 'none';
+      if (summary) summary.textContent = 'Section Tour & Timing Tuning';
+    } else if (sc === 'scroll') {
+      if (scrollDetails) scrollDetails.style.display = 'block';
+      if (secControls) secControls.style.display = 'none';
+      if (fixControls) fixControls.style.display = 'block';
+      if (summary) summary.textContent = 'Fixed Scroll & Timing Tuning';
+    } else {
+      if (scrollDetails) scrollDetails.style.display = 'none';
+    }
+  }
+
+  if ($('sectionGlideTime')) {
+    $('sectionGlideTime').addEventListener('input', (e) => {
+      state.sectionGlideTime = parseInt(e.target.value, 10) || 1800;
+      updateTimeline();
+    });
+    $('sectionGlideTime').addEventListener('change', () => saveConfig());
+  }
+
+  if ($('sectionPauseTime')) {
+    $('sectionPauseTime').addEventListener('input', (e) => {
+      state.sectionPauseTime = parseInt(e.target.value, 10) || 1200;
+      updateTimeline();
+    });
+    $('sectionPauseTime').addEventListener('change', () => saveConfig());
   }
 
   wireChips('scenarioChips', (chip) => {
     state.scenario = chip.dataset.scenario;
-    $('scrollDetails').style.display = state.scenario === 'scroll' ? 'block' : 'none';
+    updateScenarioUI();
     updateTimeline();
+    saveConfig();
   });
 
   wireChips('formatChips', (chip) => { state.format = chip.dataset.format; });
@@ -2276,9 +2329,23 @@
 
   function updateTimeline(){
     const totalDur = parseFloat($('duration').value) || 8;
-    const holdDur = state.scenario === 'scroll' ? state.heroHoldSecs : totalDur;
-    const scrollDur = state.scenario === 'scroll' ? ((parseFloat($('scrollDuration').value) || 2500) / 1000) : 0;
-    const restDur = Math.max(0, totalDur - (holdDur + scrollDur));
+    let holdDur = 0, scrollDur = 0, restDur = 0;
+
+    if (state.scenario === 'section') {
+      holdDur = state.heroHoldSecs;
+      const glide = (parseInt($('sectionGlideTime') ? $('sectionGlideTime').value : 1800, 10) || 1800) / 1000;
+      const pause = (parseInt($('sectionPauseTime') ? $('sectionPauseTime').value : 1200, 10) || 1200) / 1000;
+      scrollDur = Math.max(0, Math.min(totalDur - holdDur, glide + pause));
+      restDur = Math.max(0, totalDur - (holdDur + scrollDur));
+    } else if (state.scenario === 'scroll') {
+      holdDur = state.heroHoldSecs;
+      scrollDur = ((parseFloat($('scrollDuration').value) || 2500) / 1000);
+      restDur = Math.max(0, totalDur - (holdDur + scrollDur));
+    } else {
+      holdDur = totalDur;
+      scrollDur = 0;
+      restDur = 0;
+    }
 
     const holdPct = Math.min(100, (holdDur / totalDur) * 100);
     const scrollPct = Math.min(100 - holdPct, (scrollDur / totalDur) * 100);
@@ -2351,9 +2418,111 @@
     return `(function(){try{document.querySelectorAll('video').forEach(function(v){try{v.muted=true;v.autoplay=true;v.loop=true;v.play();}catch(e){}});}catch(e){}})();`;
   }
 
-  // Smart section-snapping & alignment snippet (~380 bytes)
-  function getSectionSnapSnippet(){
-    return `(function(){try{var s=document.createElement('style');s.id='wrs-snap-style';s.textContent='html,body{scroll-snap-type:y proximity !important;scroll-behavior:smooth !important;scroll-padding-top:10px !important;}section,[id^="section"],main>div,article,.section,header,footer{scroll-snap-align:start !important;scroll-snap-stop:normal !important;scroll-margin-top:10px !important;}';(document.head||document.documentElement).appendChild(s);}catch(e){}})();`;
+  // Autonomous Section Auto-Calculation & Smooth Tour Scroll
+  // Scans real DOM elements, calculates distance between them, and glides with smooth cubic easing
+  function getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, pauseMs, transMs) {
+    return `(function(){
+      try {
+        var heroHold = ${heroHoldMs || 3000};
+        var shouldScrollBack = ${Boolean(scrollBack)};
+        var pauseDuration = ${pauseMs || 1200};
+        var transDuration = ${transMs || 1800};
+
+        function startSectionTour() {
+          var doc = document.documentElement;
+          var body = document.body;
+          var vh = window.innerHeight || doc.clientHeight || 900;
+          var maxScroll = Math.max(doc.scrollHeight, body.scrollHeight) - vh;
+          if (maxScroll <= 50) return;
+
+          // Find candidate section anchors across modern web layouts
+          var selectors = 'section, [id^="section"], [id*="-section"], article, main > div, header, footer';
+          var rawElements = Array.prototype.slice.call(document.querySelectorAll(selectors));
+          
+          var targets = [0]; // Start at hero (0)
+          var seen = {};
+
+          rawElements.forEach(function(el) {
+            try {
+              var rect = el.getBoundingClientRect();
+              var top = Math.round(rect.top + (window.pageYOffset || doc.scrollTop || 0));
+              // Require meaningful section height and position below hero
+              if (rect.height >= 120 && top > 80 && top <= maxScroll + 100) {
+                var clampedTop = Math.min(top, maxScroll);
+                // Avoid redundant stops within 150px of each other
+                var isNear = targets.some(function(t) { return Math.abs(t - clampedTop) < 150; });
+                if (!isNear && !seen[clampedTop]) {
+                  seen[clampedTop] = true;
+                  targets.push(clampedTop);
+                }
+              }
+            } catch (e) {}
+          });
+
+          targets.sort(function(a, b) { return a - b; });
+
+          // If no distinct DOM sections found, fallback to viewport-sized steps
+          if (targets.length <= 1) {
+            var step = Math.round(vh * 0.9);
+            for (var p = step; p < maxScroll; p += step) {
+              targets.push(p);
+            }
+            targets.push(maxScroll);
+          }
+
+          if (shouldScrollBack && targets.length > 1) {
+            targets.push(0); // return to hero at the end
+          }
+
+          // Ease in-out cubic
+          function ease(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          }
+
+          function smoothScrollTo(targetY, duration, callback) {
+            var startY = window.pageYOffset || doc.scrollTop || 0;
+            var dist = targetY - startY;
+            if (Math.abs(dist) < 5 || duration <= 0) {
+              window.scrollTo(0, targetY);
+              if (callback) callback();
+              return;
+            }
+            var startTime = performance.now();
+            function step(curTime) {
+              var elapsed = curTime - startTime;
+              var progress = Math.min(1, elapsed / duration);
+              var eased = ease(progress);
+              window.scrollTo(0, Math.round(startY + dist * eased));
+              if (progress < 1) {
+                requestAnimationFrame(step);
+              } else {
+                window.scrollTo(0, targetY);
+                if (callback) callback();
+              }
+            }
+            requestAnimationFrame(step);
+          }
+
+          var currentIndex = 0;
+          function advance() {
+            if (currentIndex >= targets.length - 1) return;
+            currentIndex++;
+            smoothScrollTo(targets[currentIndex], transDuration, function() {
+              setTimeout(advance, pauseDuration);
+            });
+          }
+
+          // Start after hero hold delay
+          setTimeout(advance, heroHold);
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function() { setTimeout(startSectionTour, 300); });
+        } else {
+          setTimeout(startSectionTour, 300);
+        }
+      } catch (err) {}
+    })();`;
   }
 
   // Ultralight autonomous theme activation script (~550 bytes)
@@ -2373,20 +2542,25 @@
     const heroHoldMs = heroHoldS * 1000;
     const preloadS = state.preloadDelaySecs;
     const preloadMs = preloadS * 1000;
-    const isScroll = state.scenario === 'scroll';
+    const isSectionTour = state.scenario === 'section';
+    const isFixedScroll = state.scenario === 'scroll';
     const forcePlay = $('forceVideoPlay').checked;
     const scrollDistPx = parseInt($('scrollBy').value, 10) || 1200;
     const scrollDurMs = parseInt($('scrollDuration').value, 10) || 2500;
     const scrollBack = $('scrollBack').checked;
-    const sectionSnap = $('sectionSnap') ? $('sectionSnap').checked : true;
+
+    const totalDurMs = (parseInt(duration, 10) || 8) * 1000;
+    const sectionGlideMs = parseInt($('sectionGlideTime') ? $('sectionGlideTime').value : 1800, 10) || 1800;
+    const sectionPauseMs = parseInt($('sectionPauseTime') ? $('sectionPauseTime').value : 1200, 10) || 1200;
 
     const themeSnippet = getThemeActivationSnippet(state.colorScheme);
+    const tourSnippet = isSectionTour ? getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, sectionPauseMs, sectionGlideMs) : '';
 
     // Combine scripts to inject
     const combinedScripts = [
       (forcePlay ? getVideoAutoplaySnippet() : ''),
       themeSnippet,
-      (sectionSnap ? getSectionSnapSnippet() : '')
+      tourSnippet
     ].filter(Boolean).join('\n');
 
     // 1. ScreenshotOne (Native scroll_start_delay ensures true hero hold + native smooth scroll)
@@ -2399,7 +2573,7 @@
         access_key: cfg.accessKey,
         format: state.format,
         duration: parseInt(duration, 10),
-        scenario: isScroll ? 'scroll' : 'default',
+        scenario: isFixedScroll ? 'scroll' : 'default',
         viewport_width: state.viewportW,
         viewport_height: state.viewportH,
         block_ads: $('blockAds').checked,
@@ -2418,7 +2592,7 @@
         payload.delay = preloadS;
       }
 
-      if (isScroll) {
+      if (isFixedScroll) {
         payload.scroll_start_delay = heroHoldMs;
         payload.scroll_by = scrollDistPx;
         payload.scroll_duration = scrollDurMs;
@@ -2437,7 +2611,7 @@
       fallbackParams.set('access_key', cfg.accessKey);
       fallbackParams.set('format', state.format);
       fallbackParams.set('duration', duration);
-      fallbackParams.set('scenario', isScroll ? 'scroll' : 'default');
+      fallbackParams.set('scenario', isFixedScroll ? 'scroll' : 'default');
       fallbackParams.set('viewport_width', String(state.viewportW));
       fallbackParams.set('viewport_height', String(state.viewportH));
       if (state.colorScheme === 'dark') fallbackParams.set('dark_mode', 'true');
@@ -2469,7 +2643,7 @@
       params.set('format', format);
       params.set('video_duration', String(duration));
       
-      params.set('video_scroll', isScroll ? 'true' : 'false');
+      params.set('video_scroll', isFixedScroll ? 'true' : 'false');
       params.set('viewport_width', String(state.viewportW));
       params.set('viewport_height', String(state.viewportH));
       if (state.viewportW <= 480) params.set('viewport_mobile', 'true');
@@ -2513,7 +2687,7 @@
       params.set('embed', 'video.url');
       params.set('viewport.width', String(state.viewportW));
       params.set('viewport.height', String(state.viewportH));
-      if (isScroll) params.set('scroll', 'true');
+      if (isFixedScroll) params.set('scroll', 'true');
       
       // Native colorScheme option for Microlink Puppeteer
       if (state.colorScheme === 'dark' || state.colorScheme === 'light') {
@@ -2589,7 +2763,7 @@
         .replace(/\{\{width\}\}/g, String(state.viewportW))
         .replace(/\{\{height\}\}/g, String(state.viewportH))
         .replace(/\{\{format\}\}/g, state.format)
-        .replace(/\{\{scroll\}\}/g, isScroll ? 'true' : 'false')
+        .replace(/\{\{scroll\}\}/g, isFixedScroll ? 'true' : 'false')
         .replace(/\{\{color_scheme\}\}/g, state.colorScheme)
         .replace(/\{\{dark_mode\}\}/g, state.colorScheme === 'dark' ? 'true' : 'false')
         .replace(/\{\{theme\}\}/g, state.colorScheme)

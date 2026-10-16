@@ -23,9 +23,8 @@ You can use the tool directly in your browser without any installation:
 - 🎬 **HTML5 Video Autoplay Override**: Automatically wakes up, un-mutes, and loops `<video>` background reels that headless browsers normally suppress.
 - 🌐 **Multi-Engine API Architecture**: Seamlessly switch between **ScreenshotOne**, **ScreenshotCore**, **Microlink**, **Urlbox**, and **Custom Self-Hosted / Playwright / Browserless** endpoints.
 - 🌓 **Dark & Light Mode**: High-contrast theme toggle with retro-modern aesthetic, persistent preferences, and smooth transitions.
-- ✨ **Interactive Particle Canvas**: Subtle mouse-reactive particle grid in background space.
-- 🧲 **Smart Section Alignment & Anti-Drift Engine**: Injects dynamic CSS scroll-snap anchors (`<section>`, `[id]`, `main > div`) so continuous video sweeps lock cleanly onto section headings instead of overshooting into empty padding or landing in blank space.
-- 📐 **Dynamic Viewport Height Presets**: One-click `1× Viewport` auto-alignment matching your exact viewport height ($900\text{px}$, $1080\text{px}$, etc.), preventing the common accumulation drift of hardcoded pixel scrolls.
+- 🎯 **Autonomous Section Distance Auto-Calculation**: Scans real DOM elements (`<section>`, `[id]`, `main > div`, `article`, `header`, `footer`) at runtime and dynamically calculates the exact vertical pixel distances between them. Smoothly glides with cubic-bezier easing and pauses at each section, completely eliminating viewport snap fighting, overshooting, or landing in blank padding.
+- 📐 **Dynamic Viewport Height & Fixed Scroll Modes**: Choose between autonomous section auto-calculation or fixed-pixel sweeps with `1× Viewport` auto-alignment matching your exact viewport height ($900\text{px}$, $1080\text{px}$, etc.).
 - 📱 **Multi-Device Viewports**: Pre-configured viewports for Full HD ($1920 \times 1080$), Desktop ($1440 \times 900$), Laptop ($1280 \times 800$), Tablet ($768 \times 1024$), Mobile ($390 \times 844$), and custom pixel dimensions.
 - 🎞️ **Multi-Format Export**: Export recordings to **MP4**, **WebM**, **GIF**, and **MOV**.
 - 📊 **Visual Playback Timeline**: Real-time breakdown of video duration ($\text{Hero Hold} \rightarrow \text{Smooth Scroll} \rightarrow \text{Settle/Scroll Back}$).
