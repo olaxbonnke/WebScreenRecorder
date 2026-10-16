@@ -1337,7 +1337,9 @@
     <div class="field" id="fieldViewport">
       <label class="label">Viewport</label>
       <div class="chips" id="viewportChips">
+        <span class="chip" data-w="1920" data-h="1080">Full HD 1920×1080</span>
         <span class="chip active" data-w="1440" data-h="900">Desktop 1440×900</span>
+        <span class="chip" data-w="1280" data-h="800">Laptop 1280×800</span>
         <span class="chip" data-w="768" data-h="1024">Tablet 768×1024</span>
         <span class="chip" data-w="390" data-h="844">Mobile 390×844</span>
         <span class="chip" data-custom="1">Custom</span>
@@ -1379,8 +1381,17 @@
       <div class="disclosure-body">
         <div class="row">
           <div class="field">
-            <label class="label" for="scrollBy">Scroll distance (px)</label>
-            <input type="number" id="scrollBy" value="1200" min="100" max="5000" />
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label class="label" for="scrollBy" style="margin-bottom:0;">Scroll distance (px)</label>
+              <span style="font-size:11px; color:var(--cyan); font-family:var(--mono);" id="scrollRatioNote">≈ 1.3× viewport</span>
+            </div>
+            <input type="number" id="scrollBy" value="1200" min="100" max="10000" />
+            <div class="chips" id="scrollPresetChips" style="margin-top:6px;">
+              <span class="chip" data-mode="1x">1× Viewport (<span id="vp1xVal">900px</span>)</span>
+              <span class="chip" data-mode="1.5x">1.5× Viewport</span>
+              <span class="chip active" data-val="1200">1200px</span>
+              <span class="chip" data-val="900">900px</span>
+            </div>
           </div>
           <div class="field">
             <label class="label" for="scrollDuration">Scroll time (ms)</label>
@@ -1402,10 +1413,24 @@
             </select>
           </div>
         </div>
+
+        <label class="toggle" style="margin-top:6px;">
+          <input type="checkbox" id="sectionSnap" checked />
+          <span><strong>Smart Section Alignment (Prevents blank space &amp; drift)</strong></span>
+        </label>
+        <p class="hint" style="margin-top:2px; margin-bottom:8px;">
+          Injects smart CSS scroll-snap anchors (<code>&lt;section&gt;</code>, <code>[id]</code>, <code>main &gt; div</code>) so video sweeps lock smoothly onto headings &amp; section tops rather than overshooting into empty margins.
+        </p>
+
         <label class="toggle">
           <input type="checkbox" id="scrollBack" checked />
-          Scroll back to top before finishing
+          <span>Scroll back to top before finishing</span>
         </label>
+
+        <div style="margin-top:12px; padding:10px 14px; border-radius:8px; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.22); font-size:11.5px; line-height:1.5; color:#94a3b8;">
+          <strong style="color:var(--cyan);">💡 Pro-Tip for Clean Section Recordings:</strong>
+          Webpage sections vary in height. If scrolling by 900px overshoots or lands in blank space, keep <strong>Smart Section Alignment</strong> enabled or use <strong>1× Viewport</strong> to align with your screen dimensions.
+        </div>
       </div>
     </details>
 
@@ -1942,6 +1967,7 @@
     scenario: 'scroll',
     format: 'mp4',
     colorScheme: 'system',   // 'system' | 'light' | 'dark'
+    sectionSnap: true,
     history: []
   };
 
@@ -1978,6 +2004,7 @@
         if (cfg.providers) state.providers = { ...state.providers, ...cfg.providers };
         if (cfg.heroHoldSecs !== undefined) state.heroHoldSecs = cfg.heroHoldSecs;
         if (cfg.preloadDelaySecs !== undefined) state.preloadDelaySecs = cfg.preloadDelaySecs;
+        if (cfg.sectionSnap !== undefined) state.sectionSnap = cfg.sectionSnap;
       } else {
         const legacy = await storageEngine.get('config_multi_v5') || await storageEngine.get('config_multi_v4');
         if (legacy) {
@@ -2007,7 +2034,8 @@
         provider: state.provider,
         providers: state.providers,
         heroHoldSecs: state.heroHoldSecs,
-        preloadDelaySecs: state.preloadDelaySecs
+        preloadDelaySecs: state.preloadDelaySecs,
+        sectionSnap: state.sectionSnap
       }));
       return true;
     } catch (e) {
@@ -2044,11 +2072,13 @@
     setHeroHoldUI(state.heroHoldSecs);
     $('preloadRange').value = state.preloadDelaySecs;
     $('preloadVal').textContent = state.preloadDelaySecs + 's';
+    if ($('sectionSnap')) $('sectionSnap').checked = state.sectionSnap !== false;
 
     document.querySelectorAll('#providerChips .chip').forEach(c => {
       c.classList.toggle('active', c.dataset.provider === state.provider);
     });
     switchProviderTab(state.provider);
+    if (typeof updateScrollHelperUI === 'function') updateScrollHelperUI();
   }
 
   function switchProviderTab(providerName){
@@ -2179,9 +2209,51 @@
       state.viewportW = parseInt(chip.dataset.w, 10);
       state.viewportH = parseInt(chip.dataset.h, 10);
     }
+    updateScrollHelperUI();
   });
-  $('customW').addEventListener('input', e => state.viewportW = parseInt(e.target.value, 10) || 1440);
-  $('customH').addEventListener('input', e => state.viewportH = parseInt(e.target.value, 10) || 900);
+  $('customW').addEventListener('input', e => {
+    state.viewportW = parseInt(e.target.value, 10) || 1440;
+    updateScrollHelperUI();
+  });
+  $('customH').addEventListener('input', e => {
+    state.viewportH = parseInt(e.target.value, 10) || 900;
+    updateScrollHelperUI();
+  });
+
+  function updateScrollHelperUI(){
+    const h = state.viewportH || 900;
+    const vpSpan = $('vp1xVal');
+    if (vpSpan) vpSpan.textContent = h + 'px';
+
+    const curScroll = parseInt($('scrollBy').value, 10) || 1200;
+    const ratio = (curScroll / h).toFixed(1);
+    const note = $('scrollRatioNote');
+    if (note) note.textContent = `≈ ${ratio}× viewport`;
+  }
+
+  wireChips('scrollPresetChips', (chip) => {
+    const h = state.viewportH || 900;
+    if (chip.dataset.mode === '1x') {
+      $('scrollBy').value = h;
+    } else if (chip.dataset.mode === '1.5x') {
+      $('scrollBy').value = Math.round(h * 1.5);
+    } else if (chip.dataset.val) {
+      $('scrollBy').value = parseInt(chip.dataset.val, 10);
+    }
+    updateScrollHelperUI();
+  });
+
+  $('scrollBy').addEventListener('input', () => {
+    updateScrollHelperUI();
+    document.querySelectorAll('#scrollPresetChips .chip').forEach(c => c.classList.remove('active'));
+  });
+
+  if ($('sectionSnap')) {
+    $('sectionSnap').addEventListener('change', (e) => {
+      state.sectionSnap = e.target.checked;
+      saveConfig();
+    });
+  }
 
   wireChips('scenarioChips', (chip) => {
     state.scenario = chip.dataset.scenario;
@@ -2279,6 +2351,11 @@
     return `(function(){try{document.querySelectorAll('video').forEach(function(v){try{v.muted=true;v.autoplay=true;v.loop=true;v.play();}catch(e){}});}catch(e){}})();`;
   }
 
+  // Smart section-snapping & alignment snippet (~380 bytes)
+  function getSectionSnapSnippet(){
+    return `(function(){try{var s=document.createElement('style');s.id='wrs-snap-style';s.textContent='html,body{scroll-snap-type:y proximity !important;scroll-behavior:smooth !important;scroll-padding-top:10px !important;}section,[id^="section"],main>div,article,.section,header,footer{scroll-snap-align:start !important;scroll-snap-stop:normal !important;scroll-margin-top:10px !important;}';(document.head||document.documentElement).appendChild(s);}catch(e){}})();`;
+  }
+
   // Ultralight autonomous theme activation script (~550 bytes)
   function getThemeActivationSnippet(scheme){
     if (!scheme || scheme === 'system') return '';
@@ -2301,13 +2378,15 @@
     const scrollDistPx = parseInt($('scrollBy').value, 10) || 1200;
     const scrollDurMs = parseInt($('scrollDuration').value, 10) || 2500;
     const scrollBack = $('scrollBack').checked;
+    const sectionSnap = $('sectionSnap') ? $('sectionSnap').checked : true;
 
     const themeSnippet = getThemeActivationSnippet(state.colorScheme);
 
     // Combine scripts to inject
     const combinedScripts = [
       (forcePlay ? getVideoAutoplaySnippet() : ''),
-      themeSnippet
+      themeSnippet,
+      (sectionSnap ? getSectionSnapSnippet() : '')
     ].filter(Boolean).join('\n');
 
     // 1. ScreenshotOne (Native scroll_start_delay ensures true hero hold + native smooth scroll)
