@@ -2420,36 +2420,54 @@
 
   // Autonomous Section Auto-Calculation & Smooth Tour Scroll
   // Scans real DOM elements, calculates distance between them, and glides with smooth cubic easing
-  function getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, pauseMs, transMs) {
+  function getSectionTourSnippet(preloadMs, heroHoldMs, totalDurMs, scrollBack, pauseMs, transMs) {
     return `(function(){
       try {
+        var preloadDelay = ${preloadMs || 0};
         var heroHold = ${heroHoldMs || 3000};
         var shouldScrollBack = ${Boolean(scrollBack)};
         var pauseDuration = ${pauseMs || 1200};
         var transDuration = ${transMs || 1800};
+        var totalStartWait = preloadDelay + heroHold;
 
-        function startSectionTour() {
+        // Force scroll strictly to top (0, 0) immediately
+        try {
+          if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+          window.scrollTo(0, 0);
+          if (document.documentElement) document.documentElement.scrollTop = 0;
+          if (document.body) document.body.scrollTop = 0;
+        } catch (e) {}
+
+        // Keep pinned to (0, 0) throughout warmup and hero hold
+        var pinTimer = setInterval(function() {
+          try {
+            if (window.pageYOffset > 0 || (document.documentElement && document.documentElement.scrollTop > 0)) {
+              window.scrollTo(0, 0);
+            }
+          } catch (e) {}
+        }, 40);
+
+        function startTour() {
+          clearInterval(pinTimer);
+
           var doc = document.documentElement;
           var body = document.body;
-          var vh = window.innerHeight || doc.clientHeight || 900;
-          var maxScroll = Math.max(doc.scrollHeight, body.scrollHeight) - vh;
+          var vh = window.innerHeight || (doc ? doc.clientHeight : 900);
+          var maxScroll = Math.max(doc ? doc.scrollHeight : 0, body ? body.scrollHeight : 0) - vh;
           if (maxScroll <= 50) return;
 
-          // Find candidate section anchors across modern web layouts
+          // Measure live DOM section anchors after page hydration
           var selectors = 'section, [id^="section"], [id*="-section"], article, main > div, header, footer';
           var rawElements = Array.prototype.slice.call(document.querySelectorAll(selectors));
-          
-          var targets = [0]; // Start at hero (0)
+          var targets = [0];
           var seen = {};
 
           rawElements.forEach(function(el) {
             try {
               var rect = el.getBoundingClientRect();
-              var top = Math.round(rect.top + (window.pageYOffset || doc.scrollTop || 0));
-              // Require meaningful section height and position below hero
+              var top = Math.round(rect.top + (window.pageYOffset || (doc ? doc.scrollTop : 0) || 0));
               if (rect.height >= 120 && top > 80 && top <= maxScroll + 100) {
                 var clampedTop = Math.min(top, maxScroll);
-                // Avoid redundant stops within 150px of each other
                 var isNear = targets.some(function(t) { return Math.abs(t - clampedTop) < 150; });
                 if (!isNear && !seen[clampedTop]) {
                   seen[clampedTop] = true;
@@ -2461,7 +2479,6 @@
 
           targets.sort(function(a, b) { return a - b; });
 
-          // If no distinct DOM sections found, fallback to viewport-sized steps
           if (targets.length <= 1) {
             var step = Math.round(vh * 0.9);
             for (var p = step; p < maxScroll; p += step) {
@@ -2471,16 +2488,15 @@
           }
 
           if (shouldScrollBack && targets.length > 1) {
-            targets.push(0); // return to hero at the end
+            targets.push(0);
           }
 
-          // Ease in-out cubic
           function ease(t) {
             return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
           }
 
           function smoothScrollTo(targetY, duration, callback) {
-            var startY = window.pageYOffset || doc.scrollTop || 0;
+            var startY = window.pageYOffset || (doc ? doc.scrollTop : 0) || 0;
             var dist = targetY - startY;
             if (Math.abs(dist) < 5 || duration <= 0) {
               window.scrollTo(0, targetY);
@@ -2512,15 +2528,12 @@
             });
           }
 
-          // Start after hero hold delay
-          setTimeout(advance, heroHold);
+          // Advance to first section after hero hold has completed on video
+          advance();
         }
 
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', function() { setTimeout(startSectionTour, 300); });
-        } else {
-          setTimeout(startSectionTour, 300);
-        }
+        // Wait until both warmup and hero hold have elapsed before moving
+        setTimeout(startTour, totalStartWait);
       } catch (err) {}
     })();`;
   }
@@ -2554,7 +2567,7 @@
     const sectionPauseMs = parseInt($('sectionPauseTime') ? $('sectionPauseTime').value : 1200, 10) || 1200;
 
     const themeSnippet = getThemeActivationSnippet(state.colorScheme);
-    const tourSnippet = isSectionTour ? getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, sectionPauseMs, sectionGlideMs) : '';
+    const tourSnippet = isSectionTour ? getSectionTourSnippet(preloadMs, heroHoldMs, totalDurMs, scrollBack, sectionPauseMs, sectionGlideMs) : '';
 
     // Combine scripts to inject
     const combinedScripts = [
@@ -2653,9 +2666,8 @@
         params.set('dark_mode', 'true');
       }
 
-      const totalWait = preloadMs + heroHoldMs;
-      if (totalWait > 0) {
-        params.set('delay', String(totalWait));
+      if (preloadS > 0) {
+        params.set('delay', String(preloadMs));
       }
 
       if (combinedScripts) {
@@ -2694,8 +2706,7 @@
         params.set('colorScheme', state.colorScheme);
       }
 
-      const totalWait = preloadMs + heroHoldMs;
-      if (totalWait > 0) params.set('waitForTimeout', String(totalWait));
+      if (preloadMs > 0) params.set('waitForTimeout', String(preloadMs));
       if (combinedScripts) params.set('scripts', combinedScripts);
 
       const headers = {};
@@ -2726,8 +2737,7 @@
         params.set('dark_mode', 'true');
       }
       
-      const totalWait = preloadMs + heroHoldMs;
-      if (totalWait > 0) params.set('delay', String(totalWait));
+      if (preloadS > 0) params.set('delay', String(preloadMs));
       if (combinedScripts) params.set('js', combinedScripts);
 
       if ($('blockAds').checked) params.set('block_ads', 'true');
