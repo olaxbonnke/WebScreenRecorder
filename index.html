@@ -1380,9 +1380,24 @@
     <details class="disclosure" id="scrollDetails" open>
       <summary id="scrollDetailsSummary">Section Tour &amp; Timing Tuning</summary>
       <div class="disclosure-body">
-        <!-- Section-based controls (calculates exact distance between DOM sections) -->
+        <!-- Section-based controls (optimized distance between sections) -->
         <div id="sectionModeControls">
           <div class="row">
+            <div class="field">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <label class="label" for="sectionStepPx" style="margin-bottom:0;">Section Scroll Step (px)</label>
+                <span style="font-size:11px; color:var(--cyan); font-family:var(--mono);" id="sectionStepRatio">≈ 0.9× viewport</span>
+              </div>
+              <input type="number" id="sectionStepPx" value="800" min="200" max="4000" />
+              <div class="chips" id="sectionStepChips" style="margin-top:6px;">
+                <span class="chip active" data-step="800">🎯 800px (Standard Section)</span>
+                <span class="chip" data-step="720">720px (Compact Section)</span>
+                <span class="chip" data-step="880">880px (Deep Section)</span>
+                <span class="chip" data-step="vp">1× Viewport (<span id="vpStepVal">900px</span>)</span>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px;">
             <div class="field">
               <label class="label" for="sectionGlideTime">Glide time between sections (ms)</label>
               <input type="number" id="sectionGlideTime" value="1800" min="400" max="8000" />
@@ -1393,8 +1408,8 @@
             </div>
           </div>
           <div style="margin-top:6px; margin-bottom:12px; padding:10px 14px; border-radius:8px; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.22); font-size:11.5px; line-height:1.5; color:#94a3b8;">
-            <strong style="color:var(--cyan);">🎯 Section Distance Auto-Calculation:</strong>
-            Scans real DOM section coordinates (<code>&lt;section&gt;</code>, <code>[id]</code>, <code>main &gt; div</code>) on the page and calculates the exact pixel distance dynamically. Zero overshooting, zero blank padding, and zero fighting with viewport scroll snap.
+            <strong style="color:var(--cyan);">🎯 Section Precision Stepping:</strong>
+            Steps through each section at the optimal distance (800px) instead of jumping a full 1200px or fighting CSS scroll-snap. The video starts on camera at the Hero, holds steadily, glides to each section, and reaches the footer.
           </div>
         </div>
 
@@ -1974,6 +1989,7 @@
     viewportW: 1440,
     viewportH: 900,
     scenario: 'section',
+    sectionStepPx: 800,
     sectionGlideTime: 1800,
     sectionPauseTime: 1200,
     format: 'mp4',
@@ -2015,6 +2031,7 @@
         if (cfg.heroHoldSecs !== undefined) state.heroHoldSecs = cfg.heroHoldSecs;
         if (cfg.preloadDelaySecs !== undefined) state.preloadDelaySecs = cfg.preloadDelaySecs;
         if (cfg.scenario) state.scenario = cfg.scenario;
+        if (cfg.sectionStepPx !== undefined) state.sectionStepPx = cfg.sectionStepPx;
         if (cfg.sectionGlideTime !== undefined) state.sectionGlideTime = cfg.sectionGlideTime;
         if (cfg.sectionPauseTime !== undefined) state.sectionPauseTime = cfg.sectionPauseTime;
       } else {
@@ -2048,6 +2065,7 @@
         heroHoldSecs: state.heroHoldSecs,
         preloadDelaySecs: state.preloadDelaySecs,
         scenario: state.scenario,
+        sectionStepPx: state.sectionStepPx,
         sectionGlideTime: state.sectionGlideTime,
         sectionPauseTime: state.sectionPauseTime
       }));
@@ -2087,6 +2105,7 @@
     $('preloadRange').value = state.preloadDelaySecs;
     $('preloadVal').textContent = state.preloadDelaySecs + 's';
 
+    if ($('sectionStepPx')) $('sectionStepPx').value = state.sectionStepPx || 800;
     if ($('sectionGlideTime')) $('sectionGlideTime').value = state.sectionGlideTime || 1800;
     if ($('sectionPauseTime')) $('sectionPauseTime').value = state.sectionPauseTime || 1200;
 
@@ -2246,6 +2265,13 @@
     const ratio = (curScroll / h).toFixed(1);
     const note = $('scrollRatioNote');
     if (note) note.textContent = `≈ ${ratio}× viewport`;
+
+    const vpStep = $('vpStepVal');
+    if (vpStep) vpStep.textContent = h + 'px';
+    const curSecStep = parseInt($('sectionStepPx') ? $('sectionStepPx').value : 800, 10) || 800;
+    const secRatio = (curSecStep / h).toFixed(1);
+    const secRatioEl = $('sectionStepRatio');
+    if (secRatioEl) secRatioEl.textContent = `≈ ${secRatio}× viewport`;
   }
 
   wireChips('scrollPresetChips', (chip) => {
@@ -2264,6 +2290,27 @@
     updateScrollHelperUI();
     document.querySelectorAll('#scrollPresetChips .chip').forEach(c => c.classList.remove('active'));
   });
+
+  wireChips('sectionStepChips', (chip) => {
+    const h = state.viewportH || 900;
+    if (chip.dataset.step === 'vp') {
+      $('sectionStepPx').value = h;
+    } else if (chip.dataset.step) {
+      $('sectionStepPx').value = parseInt(chip.dataset.step, 10);
+    }
+    state.sectionStepPx = parseInt($('sectionStepPx').value, 10) || 800;
+    updateScrollHelperUI();
+    saveConfig();
+  });
+
+  if ($('sectionStepPx')) {
+    $('sectionStepPx').addEventListener('input', (e) => {
+      state.sectionStepPx = parseInt(e.target.value, 10) || 800;
+      updateScrollHelperUI();
+      document.querySelectorAll('#sectionStepChips .chip').forEach(c => c.classList.remove('active'));
+    });
+    $('sectionStepPx').addEventListener('change', () => saveConfig());
+  }
 
   function updateScenarioUI() {
     const sc = state.scenario || 'section';
@@ -2333,10 +2380,8 @@
 
     if (state.scenario === 'section') {
       holdDur = state.heroHoldSecs;
-      const glide = (parseInt($('sectionGlideTime') ? $('sectionGlideTime').value : 1800, 10) || 1800) / 1000;
-      const pause = (parseInt($('sectionPauseTime') ? $('sectionPauseTime').value : 1200, 10) || 1200) / 1000;
-      scrollDur = Math.max(0, Math.min(totalDur - holdDur, glide + pause));
-      restDur = Math.max(0, totalDur - (holdDur + scrollDur));
+      scrollDur = Math.max(0, totalDur - holdDur);
+      restDur = 0;
     } else if (state.scenario === 'scroll') {
       holdDur = state.heroHoldSecs;
       scrollDur = ((parseFloat($('scrollDuration').value) || 2500) / 1000);
@@ -2497,7 +2542,7 @@
           var returnReserveMs = shouldScrollBack ? transDuration : 0;
           var usableMs = Math.max(1500, availableMs - returnReserveMs);
           var cycleMs = transDuration + pauseDuration;
-          var maxStopsAllowed = Math.max(1, Math.floor(usableMs / cycleMs));
+          var maxStopsAllowed = Math.max(2, Math.floor(usableMs / cycleMs));
 
           var stopsAfterHero = targets.slice(1);
           if (stopsAfterHero.length > maxStopsAllowed) {
@@ -2603,8 +2648,10 @@
     const preloadMs = preloadS * 1000;
     const isSectionTour = state.scenario === 'section';
     const isFixedScroll = state.scenario === 'scroll';
+    const isScrollScenario = isSectionTour || isFixedScroll;
     const forcePlay = $('forceVideoPlay').checked;
     const scrollDistPx = parseInt($('scrollBy').value, 10) || 1200;
+    const sectionStepPx = parseInt($('sectionStepPx') ? $('sectionStepPx').value : 800, 10) || 800;
     const scrollDurMs = parseInt($('scrollDuration').value, 10) || 2500;
     const scrollBack = $('scrollBack').checked;
 
@@ -2615,10 +2662,15 @@
     const themeSnippet = getThemeActivationSnippet(state.colorScheme);
     const tourSnippet = isSectionTour ? getSectionTourSnippet(heroHoldMs, totalDurMs, scrollBack, sectionPauseMs, sectionGlideMs) : '';
 
-    // Combine scripts to inject
-    const combinedScripts = [
+    // Standard client scripts for DOM / theme (autoplay, dark mode, etc.)
+    const baseClientScripts = [
       (forcePlay ? getVideoAutoplaySnippet() : ''),
-      themeSnippet,
+      themeSnippet
+    ].filter(Boolean).join('\n');
+
+    // Combined scripts including client-side tour for non-CDP providers
+    const combinedScripts = [
+      baseClientScripts,
       tourSnippet
     ].filter(Boolean).join('\n');
 
@@ -2627,12 +2679,17 @@
       const cfg = state.providers.screenshotone;
       if (!cfg.accessKey) return { error: 'ScreenshotOne access key is missing. Open settings to enter it.' };
 
+      const effectiveStepPx = isSectionTour ? sectionStepPx : scrollDistPx;
+      const effectiveDurationMs = isSectionTour ? sectionGlideMs : scrollDurMs;
+      const effectiveDelayMs = isSectionTour ? sectionPauseMs : (parseInt($('scrollDelay').value, 10) || 500);
+      const effectiveEasing = isSectionTour ? 'ease_in_out_cubic' : $('scrollEasing').value;
+
       const payload = {
         url: site,
         access_key: cfg.accessKey,
         format: state.format,
         duration: parseInt(duration, 10),
-        scenario: isFixedScroll ? 'scroll' : 'default',
+        scenario: isScrollScenario ? 'scroll' : 'default',
         viewport_width: state.viewportW,
         viewport_height: state.viewportH,
         block_ads: $('blockAds').checked,
@@ -2647,37 +2704,44 @@
         payload.dark_mode = false;
       }
 
-      if (isFixedScroll) {
-        if (preloadS > 0) payload.delay = preloadS;
+      if (preloadS > 0) payload.delay = preloadS;
+
+      if (isScrollScenario) {
         payload.scroll_start_delay = heroHoldMs;
-        payload.scroll_by = scrollDistPx;
-        payload.scroll_duration = scrollDurMs;
-        payload.scroll_delay = parseInt($('scrollDelay').value, 10) || 500;
-        payload.scroll_easing = $('scrollEasing').value;
+        payload.scroll_by = effectiveStepPx;
+        payload.scroll_duration = effectiveDurationMs;
+        payload.scroll_delay = effectiveDelayMs;
+        payload.scroll_easing = effectiveEasing;
         payload.scroll_back = scrollBack;
-      } else if (isSectionTour) {
-        // Start video capture immediately at hero (0,0); hero hold is recorded on camera
-        payload.delay = 0;
-      } else {
-        if (preloadS > 0) payload.delay = preloadS;
       }
 
-      if (combinedScripts) {
-        payload.scripts = combinedScripts;
+      // DO NOT inject client-side tour snippet into ScreenshotOne!
+      // ScreenshotOne's native server-side scenario: 'scroll' controls the CDP camera directly,
+      // guaranteeing frame 0 is on the Hero and eliminating timing desync.
+      if (baseClientScripts) {
+        payload.scripts = baseClientScripts;
       }
 
-      // Also construct fallback GET URL (without heavy scripts) in case user wants to inspect or open in browser
+      // Also construct fallback GET URL in case user wants to inspect or open in browser
       const fallbackParams = new URLSearchParams();
       fallbackParams.set('url', site);
       fallbackParams.set('access_key', cfg.accessKey);
       fallbackParams.set('format', state.format);
       fallbackParams.set('duration', duration);
-      fallbackParams.set('scenario', isFixedScroll ? 'scroll' : 'default');
+      fallbackParams.set('scenario', isScrollScenario ? 'scroll' : 'default');
       fallbackParams.set('viewport_width', String(state.viewportW));
       fallbackParams.set('viewport_height', String(state.viewportH));
       if (state.colorScheme === 'dark') fallbackParams.set('dark_mode', 'true');
       if (state.colorScheme === 'light') fallbackParams.set('dark_mode', 'false');
       if (preloadS > 0) fallbackParams.set('delay', String(preloadS));
+      if (isScrollScenario) {
+        fallbackParams.set('scroll_start_delay', String(heroHoldMs));
+        fallbackParams.set('scroll_by', String(effectiveStepPx));
+        fallbackParams.set('scroll_duration', String(effectiveDurationMs));
+        fallbackParams.set('scroll_delay', String(effectiveDelayMs));
+        fallbackParams.set('scroll_easing', effectiveEasing);
+        if (scrollBack) fallbackParams.set('scroll_back', 'true');
+      }
 
       let getUrl = 'https://api.screenshotone.com/animate?' + fallbackParams.toString();
 
