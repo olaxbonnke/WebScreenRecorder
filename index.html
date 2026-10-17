@@ -1886,6 +1886,9 @@
 
   function positionSpotlight(index){
     tourIndex = index;
+    if (tourIndex !== 0 && $('setupPanel')) {
+      $('setupPanel').style.display = 'none';
+    }
     const stage = tourStages[index];
     const targetEl = stage.target();
     if (!targetEl) return;
@@ -1927,6 +1930,7 @@
 
   function stopSpotlightTour(){
     spotlightOverlay.classList.remove('active');
+    if ($('setupPanel')) $('setupPanel').style.display = 'none';
     if (tourRafId) {
       cancelAnimationFrame(tourRafId);
       tourRafId = null;
@@ -2205,6 +2209,8 @@
 
   document.querySelectorAll('#customPresets .chip').forEach(btn => {
     btn.addEventListener('click', () => {
+      document.querySelectorAll('#customPresets .chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
       const preset = btn.dataset.preset;
       if (preset === 'screenshotone') {
         $('customEndpoint').value = 'https://api.screenshotone.com/animate?url={{url}}&access_key={{key}}&format={{format}}&duration={{duration}}&scenario=scroll&scroll_start_delay={{hero_hold_ms}}&delay={{preload_delay_s}}';
@@ -2222,6 +2228,7 @@
 
   function wireChips(groupId, onPick){
     const group = $(groupId);
+    if (!group) return;
     group.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => {
         group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -2737,6 +2744,7 @@
         scenario: isFixedScroll ? 'scroll' : 'default',
         viewport_width: state.viewportW,
         viewport_height: state.viewportH,
+        bypass_csp: true,
         block_ads: $('blockAds').checked,
         block_cookie_banners: $('blockCookies').checked,
         block_chats: $('blockChats').checked,
@@ -2775,6 +2783,7 @@
       fallbackParams.set('scenario', isFixedScroll ? 'scroll' : 'default');
       fallbackParams.set('viewport_width', String(state.viewportW));
       fallbackParams.set('viewport_height', String(state.viewportH));
+      fallbackParams.set('bypass_csp', 'true');
       if (state.colorScheme === 'dark') fallbackParams.set('dark_mode', 'true');
       if (state.colorScheme === 'light') fallbackParams.set('dark_mode', 'false');
       if (preloadS > 0) fallbackParams.set('delay', String(preloadS));
@@ -2990,17 +2999,57 @@
       recLabel.textContent = 'READY';
       meta.textContent = opts.meta || '';
       tapeFill.style.width = '100%';
-      if (!$('viewfinder').querySelector('video.vf-video')) {
-        const video = document.createElement('video');
+      let video = $('viewfinder').querySelector('video.vf-video');
+      if (!video) {
+        video = document.createElement('video');
         video.className = 'vf-video';
         video.controls = true;
-        video.src = opts.src;
         video.autoplay = true;
         video.loop = true;
         $('viewfinder').insertBefore(video, $('viewfinder').querySelector('.tape-track'));
       }
+      video.src = opts.src;
+      video.load();
+      video.play().catch(() => {});
     }
   }
+
+  // Dedicated persistent handler for Download Button
+  $('downloadBtn').addEventListener('click', async () => {
+    if (currentObjectUrl) {
+      const a = document.createElement('a');
+      a.href = currentObjectUrl;
+      a.download = `Web-Record-Tool-${state.provider}-${Date.now()}.${state.format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return;
+    }
+    const targetUrl = $('downloadBtn').dataset.url;
+    if (!targetUrl) return;
+    try {
+      const res = await fetch(targetUrl);
+      const blob = await res.blob();
+      const bUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = bUrl;
+      a.download = `Web-Record-Tool-${state.provider}-${Date.now()}.${state.format}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(bUrl), 10000);
+    } catch (e) {
+      window.open(targetUrl, '_blank');
+    }
+  });
+
+  // Dedicated persistent handler for Open Direct Link Button
+  $('openBtn').addEventListener('click', () => {
+    const targetUrl = $('openBtn').dataset.url;
+    if (targetUrl) {
+      window.open(targetUrl, '_blank');
+    }
+  });
 
   // ---------- Record flow ----------
   $('recordBtn').addEventListener('click', async () => {
@@ -3052,11 +3101,11 @@
         if (foundUrl) {
           clearInterval(elapsedTimer);
           setViewfinder('playing', { src: foundUrl, meta: metaLabel });
+          const outUrl = foundUrl || built.directUrl || built.url;
+          $('downloadBtn').dataset.url = outUrl;
+          $('openBtn').dataset.url = outUrl;
           $('downloadBtn').style.display = 'inline-block';
           $('openBtn').style.display = 'inline-block';
-          const outUrl = foundUrl || built.directUrl || built.url;
-          $('downloadBtn').onclick = () => window.open(outUrl, '_blank');
-          $('openBtn').onclick = () => window.open(outUrl, '_blank');
           recordToHistory(built, outUrl);
           return;
         }
@@ -3081,16 +3130,11 @@
 
       setViewfinder('playing', { src: currentObjectUrl, meta: metaLabel });
 
+      const fallbackViewUrl = built.directUrl || built.url;
+      $('downloadBtn').dataset.url = currentObjectUrl;
+      $('openBtn').dataset.url = fallbackViewUrl;
       $('downloadBtn').style.display = 'inline-block';
       $('openBtn').style.display = 'inline-block';
-      $('downloadBtn').onclick = () => {
-        const a = document.createElement('a');
-        a.href = currentObjectUrl;
-        a.download = `Web-Record-Tool-${state.provider}-${Date.now()}.${state.format}`;
-        a.click();
-      };
-      const fallbackViewUrl = built.directUrl || built.url;
-      $('openBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
 
       recordToHistory(built, fallbackViewUrl);
 
@@ -3107,16 +3151,16 @@
         $('vfBody').style.display = 'none';
         $('vfRecLabel').textContent = 'READY';
         $('tapeFill').style.width = '100%';
+        $('downloadBtn').dataset.url = fallbackViewUrl;
+        $('openBtn').dataset.url = fallbackViewUrl;
         $('downloadBtn').style.display = 'inline-block';
         $('openBtn').style.display = 'inline-block';
-        $('downloadBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
-        $('openBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
         recordToHistory(built, fallbackViewUrl);
       };
       video.onerror = () => {
         setViewfinder('error', { message: `${built.provider}: ${err.message || "Failed to render video"}. Check your API key and URL.` });
+        $('openBtn').dataset.url = fallbackViewUrl;
         $('openBtn').style.display = 'inline-block';
-        $('openBtn').onclick = () => window.open(fallbackViewUrl, '_blank');
       };
       $('viewfinder').insertBefore(video, $('viewfinder').querySelector('.tape-track'));
     } finally {
